@@ -1,19 +1,22 @@
 package application
 
 import (
+	"link-shorter.dzhdmitry.net/links_in_memory"
 	"net/http"
 	"strconv"
 	"time"
 )
 
 type Config struct {
-	ProjectHost string `env:"PROJECT_HOST"`
-	ProjectPort int    `env:"PROJECT_PORT"`
+	ProjectHost         string `env:"PROJECT_HOST"`
+	ProjectPort         int    `env:"PROJECT_PORT"`
+	ProjectKeyMaxLength int    `env:"PROJECT_KEY_MAX_LENGTH"`
 }
 
 type Application struct {
 	Config Config
 	Logger Logger
+	Links  *links_in_memory.LinksCollection
 }
 
 func (app *Application) Serve() error {
@@ -32,4 +35,14 @@ func (app *Application) Serve() error {
 	}
 
 	return nil
+}
+
+func (app *Application) composeShortLink(key string) string {
+	host := app.Config.ProjectHost
+
+	if host == "" {
+		host = "localhost"
+	}
+
+	return "http://" + host + "/go/" + key
 }

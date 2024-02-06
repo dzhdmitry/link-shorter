@@ -1,11 +1,11 @@
 package application
 
 import (
+	"errors"
 	"github.com/julienschmidt/httprouter"
+	"link-shorter.dzhdmitry.net/generator"
 	"net/http"
 )
-
-type envelope map[string]interface{}
 
 func (app *Application) indexHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -20,41 +20,67 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 	err := app.readJSON(w, r, &data)
 
 	if err != nil {
-		app.errorResponse(w, err.Error())
+		app.errorResponse(w, http.StatusBadRequest, err.Error())
 
 		return
 	}
 
 	if len(data.URL) < 8 {
-		app.errorResponse(w, "URL must be present and be at least 8 letters long")
+		app.errorResponse(w, http.StatusBadRequest, "URL must be present and be at least 8 letters long")
 
 		return
 	}
 
-	shortLink := "http://localhost/go/" + data.URL // todo
+	key, err := app.Links.GenerateKey(data.URL)
+
+	if err != nil {
+		if errors.Is(err, generator.ErrLimitReached) {
+			app.errorResponse(w, http.StatusBadRequest, err.Error())
+		} else {
+			app.Logger.LogError(err)
+			app.errorResponse(w, http.StatusInternalServerError, err.Error())
+		}
+
+		return
+	}
+
+	shortLink := app.composeShortLink(key)
 	err = app.writeJSON(w, http.StatusOK, envelope{"link": shortLink}, nil)
 
 	if err != nil {
-		return
+		app.Logger.LogError(err)
+		app.errorResponse(w, http.StatusInternalServerError, err.Error())
 	}
 }
 
 func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	key := params.ByName("key")
-	fullLink := "http://example.com/" + key // todo
+
+	if key == "" {
+		app.errorResponse(w, http.StatusBadRequest, "Key must be at least 1 letter long")
+
+		return
+	}
+
+	if len(key) > app.Config.ProjectKeyMaxLength {
+		app.errorResponse(w, http.StatusBadRequest, "Key is invalid")
+
+		return
+	}
+
+	fullLink := app.Links.GetLink(key)
+
+	if fullLink == "" {
+		app.errorResponse(w, http.StatusNotFound, "Full link not found for key "+key)
+
+		return
+	}
+
 	err := app.writeJSON(w, http.StatusOK, envelope{"link": fullLink}, nil)
 
 	if err != nil {
-		return
-	}
-}
-
-func (app *Application) errorResponse(w http.ResponseWriter, message string) {
-	err := app.writeJSON(w, http.StatusBadRequest, envelope{"error": message}, nil)
-
-	if err != nil {
 		app.Logger.LogError(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		app.errorResponse(w, http.StatusInternalServerError, err.Error())
 	}
 }

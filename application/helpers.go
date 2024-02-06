@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+type envelope map[string]interface{}
+
 func (app *Application) writeJSON(w http.ResponseWriter, status int, data interface{}, headers http.Header) error {
 	js, err := json.Marshal(data)
 
@@ -73,4 +75,13 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, destina
 	}
 
 	return nil
+}
+
+func (app *Application) errorResponse(w http.ResponseWriter, status int, message string) {
+	err := app.writeJSON(w, status, envelope{"error": message}, nil)
+
+	if err != nil {
+		app.Logger.LogError(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
