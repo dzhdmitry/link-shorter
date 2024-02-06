@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  go:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - USER_UID=${USER_UID}
+        - USER_GID=${USER_GID}
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
