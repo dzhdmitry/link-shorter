@@ -7,26 +7,30 @@ import (
 )
 
 type Logger struct {
-	out io.Writer
+	out   io.Writer
+	clock ClockInterface
 }
 
-func NewLogger(out io.Writer) *Logger {
-	return &Logger{out: out}
+func NewLogger(out io.Writer, clock ClockInterface) *Logger {
+	return &Logger{
+		out:   out,
+		clock: clock,
+	}
 }
 
-func (l Logger) LogInfo(info string) {
+func (l *Logger) LogInfo(info string) {
 	l.print("INFO", info)
 }
 
-func (l Logger) LogError(err error) {
+func (l *Logger) LogError(err error) {
 	l.print("ERROR", err.Error())
 }
 
-func (l Logger) print(level, message string) {
+func (l *Logger) print(level, message string) {
 	record := fmt.Sprintf(
 		"%s: [%s] %s \n",
 		level,
-		time.Now().UTC().Format(time.RFC3339),
+		l.clock.Now().UTC().Format(time.RFC3339),
 		message,
 	)
 

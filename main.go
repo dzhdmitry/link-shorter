@@ -11,7 +11,7 @@ import (
 
 func main() {
 	config := application.Config{}
-	logger := application.NewLogger(os.Stdout)
+	logger := application.NewLogger(os.Stdout, &application.Clock{})
 
 	if err := env.Parse(&config); err != nil {
 		logger.LogError(err)
