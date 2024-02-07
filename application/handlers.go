@@ -25,8 +25,10 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if len(data.URL) < 8 {
-		app.errorResponse(w, http.StatusBadRequest, "URL must be present and be at least 8 letters long")
+	err = validateURL(data.URL)
+
+	if err != nil {
+		app.errorResponse(w, http.StatusBadRequest, err.Error())
 
 		return
 	}

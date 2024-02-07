@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -104,8 +105,14 @@ func TestGenerateHandlerBadRequest(t *testing.T) {
 		errorMessage string
 	}{
 		{"Unknown field", envelope{"unknown": "example"}, `json: unknown field \"unknown\"`},
-		{"Empty body", envelope{}, `URL must be present and be at least 8 letters long`},
-		{"Invalid url", envelope{"url": "http://"}, `URL must be present and be at least 8 letters long`},
+		{"Empty body", envelope{}, "URL must be a valid URL string"},
+		{"Too big", envelope{"url": strings.Repeat("1", 2001)}, "URL must be maximum 2000 letters long"},
+		{"Empty url", envelope{"url": ""}, "URL must be a valid URL string"},
+		{"Invalid url #1", envelope{"url": "http"}, "URL must be an absolute URL"},
+		{"Invalid url #2", envelope{"url": "http://"}, "URL must be an absolute URL"},
+		{"Invalid url #3", envelope{"url": "httpss://exmaple.com"}, "URL must begin with http or https"},
+		{"Invalid url #4", envelope{"url": "exmaple.com"}, "URL must be an absolute URL"},
+		{"Invalid url #5", envelope{"url": "/exmaple.com"}, "URL must be an absolute URL"},
 		{"Over limit", envelope{"url": "http://example.com"}, `limit reached`},
 	}
 

@@ -9,7 +9,7 @@ services:
         - USER_UID=${USER_UID}
         - USER_GID=${USER_GID}
     ports:
-      - "80:80"
+      - "${PROJECT_PORT}:${PROJECT_PORT}"
     volumes:
       - ./:/app
     env_file:
