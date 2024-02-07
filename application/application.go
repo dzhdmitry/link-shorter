@@ -1,7 +1,6 @@
 package application
 
 import (
-	"link-shorter.dzhdmitry.net/links_in_memory"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,7 +15,12 @@ type Config struct {
 type Application struct {
 	Config Config
 	Logger Logger
-	Links  *links_in_memory.LinksCollection
+	Links  LinksStorage
+}
+
+type LinksStorage interface {
+	GenerateKey(URL string) (string, error)
+	GetLink(key string) string
 }
 
 func (app *Application) Serve() error {

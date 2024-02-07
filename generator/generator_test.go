@@ -12,56 +12,16 @@ func TestGenerate(t *testing.T) {
 		lastKey  string
 		expected string
 	}{
-		{
-			name:     "Empty string",
-			lastKey:  "",
-			expected: "0",
-		},
-		{
-			name:     "First non-empty",
-			lastKey:  "0",
-			expected: "1",
-		},
-		{
-			name:     "First border between numbers and letters",
-			lastKey:  "9",
-			expected: "a",
-		},
-		{
-			name:     "First border",
-			lastKey:  "z",
-			expected: "00",
-		},
-		{
-			name:     "size=2 #1",
-			lastKey:  "01",
-			expected: "02",
-		},
-		{
-			name:     "size=2 #2",
-			lastKey:  "99",
-			expected: "9a",
-		},
-		{
-			name:     "Second border",
-			lastKey:  "zz",
-			expected: "000",
-		},
-		{
-			name:     "Random #1",
-			lastKey:  "ci2u1",
-			expected: "ci2u2",
-		},
-		{
-			name:     "Random #2",
-			lastKey:  "2v15ia120eu9vaf5du8i",
-			expected: "2v15ia120eu9vaf5du8j",
-		},
-		{
-			name:     "Under limit",
-			lastKey:  "yzzzzzzzzzzz",
-			expected: "zzzzzzzzzzzz",
-		},
+		{"Empty string", "", "0"},
+		{"First non-empty", "0", "1"},
+		{"First border between numbers and letters", "9", "a"},
+		{"First border", "z", "00"},
+		{"size=2 #1", "01", "02"},
+		{"size=2 #2", "99", "9a"},
+		{"Second border", "zz", "000"},
+		{"Random #1", "ci2u1", "ci2u2"},
+		{"Random #2", "2v15ia120eu9vaf5du8i", "2v15ia120eu9vaf5du8j"},
+		{"Under limit", "yzzzzzzzzzzz", "zzzzzzzzzzzz"},
 	}
 
 	for _, tt := range tests {

@@ -54,8 +54,7 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
-	key := params.ByName("key")
+	key := httprouter.ParamsFromContext(r.Context()).ByName("key")
 
 	if key == "" {
 		app.errorResponse(w, http.StatusBadRequest, "Key must be at least 1 letter long")

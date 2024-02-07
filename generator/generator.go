@@ -7,25 +7,25 @@ import (
 
 var ErrLimitReached = errors.New("limit reached")
 
-type Alphabet struct {
+type alphabet struct {
 	letters []string
 }
 
-func NewAlphabet() *Alphabet {
+func newAlphabet() *alphabet {
 	letters := strings.Split("0123456789abcdefghijklmnopqrstuvwxyz", "")
 
-	return &Alphabet{letters: letters}
+	return &alphabet{letters: letters}
 }
 
-func (a *Alphabet) firstLetter() string {
+func (a *alphabet) firstLetter() string {
 	return a.letters[0]
 }
 
-func (a *Alphabet) lastLetter() string {
+func (a *alphabet) lastLetter() string {
 	return a.letters[len(a.letters)-1]
 }
 
-func (a *Alphabet) indexOfLetter(letter string) int {
+func (a *alphabet) indexOfLetter(letter string) int {
 	for k, v := range a.letters {
 		if letter == v {
 			return k
@@ -35,7 +35,7 @@ func (a *Alphabet) indexOfLetter(letter string) int {
 	return -1
 }
 
-func (a *Alphabet) letterOfIndex(index int) string {
+func (a *alphabet) letterOfIndex(index int) string {
 	if index >= len(a.letters) {
 		return ""
 	}
@@ -44,7 +44,7 @@ func (a *Alphabet) letterOfIndex(index int) string {
 }
 
 func Generate(lastKey string, keyMaxLength int) (string, error) {
-	alphabet := NewAlphabet()
+	alphabet := newAlphabet()
 
 	if lastKey == "" {
 		return alphabet.firstLetter(), nil
