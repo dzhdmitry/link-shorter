@@ -17,10 +17,10 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 		URL string
 	}{}
 
-	err := app.readJSON(w, r, &data)
+	err := app.limitMaxBytes(app.extractGZIP(app.readJSON))(w, r, &data)
 
 	if err != nil {
-		app.errorResponse(w, http.StatusBadRequest, err.Error())
+		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 
 		return
 	}
@@ -28,7 +28,7 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 	err = validateURL(data.URL)
 
 	if err != nil {
-		app.errorResponse(w, http.StatusBadRequest, err.Error())
+		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 
 		return
 	}
@@ -37,21 +37,28 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		if errors.Is(err, generator.ErrLimitReached) {
-			app.errorResponse(w, http.StatusBadRequest, err.Error())
+			app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 		} else {
 			app.Logger.LogError(err)
-			app.errorResponse(w, http.StatusInternalServerError, err.Error())
+			app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 		}
 
 		return
 	}
 
 	shortLink := app.composeShortLink(key)
-	err = app.writeJSON(w, http.StatusOK, envelope{"link": shortLink}, nil)
+	response, err := app.compactGZIP(app.writeJSON)(w, r, http.StatusOK, envelope{"link": shortLink})
 
 	if err != nil {
 		app.Logger.LogError(err)
-		app.errorResponse(w, http.StatusInternalServerError, err.Error())
+		app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
+	}
+
+	_, err = w.Write(response)
+
+	if err != nil {
+		app.Logger.LogError(err)
+		app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 	}
 }
 
@@ -59,13 +66,13 @@ func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 	key := httprouter.ParamsFromContext(r.Context()).ByName("key")
 
 	if key == "" {
-		app.errorResponse(w, http.StatusBadRequest, "Key must be at least 1 letter long")
+		app.errorResponse(w, r, http.StatusBadRequest, "Key must be at least 1 letter long")
 
 		return
 	}
 
 	if len(key) > app.Config.ProjectKeyMaxLength {
-		app.errorResponse(w, http.StatusBadRequest, "Key is invalid")
+		app.errorResponse(w, r, http.StatusBadRequest, "Key is invalid")
 
 		return
 	}
@@ -73,15 +80,22 @@ func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 	fullLink := app.Links.GetLink(key)
 
 	if fullLink == "" {
-		app.errorResponse(w, http.StatusNotFound, "Full link not found for key "+key)
+		app.errorResponse(w, r, http.StatusNotFound, "Full link not found for key "+key)
 
 		return
 	}
 
-	err := app.writeJSON(w, http.StatusOK, envelope{"link": fullLink}, nil)
+	response, err := app.compactGZIP(app.writeJSON)(w, r, http.StatusOK, envelope{"link": fullLink})
 
 	if err != nil {
 		app.Logger.LogError(err)
-		app.errorResponse(w, http.StatusInternalServerError, err.Error())
+		app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
+	}
+
+	_, err = w.Write(response)
+
+	if err != nil {
+		app.Logger.LogError(err)
+		app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 	}
 }

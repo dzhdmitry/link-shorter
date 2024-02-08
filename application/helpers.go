@@ -10,29 +10,22 @@ import (
 
 type envelope map[string]interface{}
 
-func (app *Application) writeJSON(w http.ResponseWriter, status int, data interface{}, headers http.Header) error {
+func (app *Application) writeJSON(w http.ResponseWriter, r *http.Request, status int, data interface{}) ([]byte, error) {
 	js, err := json.Marshal(data)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	js = append(js, '\n')
 
-	for key, value := range headers {
-		w.Header()[key] = value
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(js)
 
-	return nil
+	return js, nil
 }
 
 func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, destination interface{}) error {
-	maxBytes := 1_048_576
-	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 	decoder := json.NewDecoder(r.Body)
 
 	decoder.DisallowUnknownFields()
@@ -77,8 +70,15 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, destina
 	return nil
 }
 
-func (app *Application) errorResponse(w http.ResponseWriter, status int, message string) {
-	err := app.writeJSON(w, status, envelope{"error": message}, nil)
+func (app *Application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message string) {
+	response, err := app.compactGZIP(app.writeJSON)(w, r, status, envelope{"error": message})
+
+	if err != nil {
+		app.Logger.LogError(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	_, err = w.Write(response)
 
 	if err != nil {
 		app.Logger.LogError(err)
