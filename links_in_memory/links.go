@@ -9,14 +9,22 @@ type LinksCollection struct {
 	links        map[string]string
 	lastKey      string
 	keyMaxLength int
+	storage      StorageInterface
 	mu           sync.Mutex
 }
 
-func NewLinksCollection(keyMaxLength int) *LinksCollection {
-	return &LinksCollection{
-		keyMaxLength: keyMaxLength,
+func NewLinksCollection(storage StorageInterface, keyMaxLength int) (*LinksCollection, error) {
+	lc := &LinksCollection{
 		links:        map[string]string{},
+		keyMaxLength: keyMaxLength,
+		storage:      storage,
 	}
+
+	if err := storage.Restore(lc.links); err != nil {
+		return nil, err
+	}
+
+	return lc, nil
 }
 
 func (lc *LinksCollection) GenerateKey(URL string) (string, error) {
@@ -32,6 +40,11 @@ func (lc *LinksCollection) GenerateKey(URL string) (string, error) {
 
 	lc.links[key] = URL
 	lc.lastKey = key
+	err = lc.storage.Store(key, URL)
+
+	if err != nil {
+		return "", err
+	}
 
 	return key, nil
 }

@@ -6,8 +6,23 @@ import (
 	"testing"
 )
 
+type testStorage struct {
+	//
+}
+
+func (ts *testStorage) Store(key, URL string) error {
+	return nil
+}
+
+func (ts *testStorage) Restore(m map[string]string) error {
+	return nil
+}
+
 func TestGenerateKey(t *testing.T) {
-	lc := NewLinksCollection(5)
+	lc, err := NewLinksCollection(&testStorage{}, 5)
+
+	require.NoError(t, err)
+
 	expectedKeys := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a"}
 
 	for _, expectedKey := range expectedKeys {
@@ -19,7 +34,10 @@ func TestGenerateKey(t *testing.T) {
 }
 
 func TestGetLink(t *testing.T) {
-	lc := NewLinksCollection(5)
+	lc, err := NewLinksCollection(&testStorage{}, 5)
+
+	require.NoError(t, err)
+
 	key, _ := lc.GenerateKey("http://example.com")
 
 	tests := []struct {

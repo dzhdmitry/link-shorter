@@ -15,7 +15,6 @@ func main() {
 
 	if err := env.Parse(&config); err != nil {
 		logger.LogError(err)
-
 		os.Exit(1)
 	}
 
@@ -24,19 +23,26 @@ func main() {
 	flag.IntVar(&config.ProjectKeyMaxLength, "key_max_length", config.ProjectKeyMaxLength, "Max length of the key")
 	flag.Parse()
 
+	storage := &links_in_memory.FileStorage{Filename: "tmp/storage.csv"}
+	links, err := links_in_memory.NewLinksCollection(storage, config.ProjectKeyMaxLength)
+
+	if err != nil {
+		logger.LogError(err)
+		os.Exit(1)
+	}
+
 	app := application.Application{
 		Config: config,
 		Logger: *logger,
-		Links:  links_in_memory.NewLinksCollection(config.ProjectKeyMaxLength),
+		Links:  links,
 	}
 
 	logger.LogInfo("Start server on " + config.ProjectHost + ":" + strconv.Itoa(config.ProjectPort))
 
-	err := app.Serve()
+	err = app.Serve()
 
 	if err != nil {
 		logger.LogError(err)
-
 		os.Exit(1)
 	}
 }
