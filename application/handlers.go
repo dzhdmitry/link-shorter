@@ -47,13 +47,14 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	shortLink := app.composeShortLink(key)
-	response, err := app.compactGZIP(app.writeJSON)(w, r, http.StatusOK, envelope{"link": shortLink})
+	response, err := app.compactGZIP(app.writeJSON)(w, r, envelope{"link": shortLink})
 
 	if err != nil {
 		app.Logger.LogError(err)
 		app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 	}
 
+	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 
 	if err != nil {
@@ -85,13 +86,14 @@ func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := app.compactGZIP(app.writeJSON)(w, r, http.StatusOK, envelope{"link": fullLink})
+	response, err := app.compactGZIP(app.writeJSON)(w, r, envelope{"link": fullLink})
 
 	if err != nil {
 		app.Logger.LogError(err)
 		app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 	}
 
+	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 
 	if err != nil {

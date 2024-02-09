@@ -15,10 +15,10 @@ func (f ReaderFunc) Run(w http.ResponseWriter, r *http.Request, destination inte
 	return f(w, r, destination)
 }
 
-type WriterFunc func(http.ResponseWriter, *http.Request, int, interface{}) ([]byte, error)
+type WriterFunc func(http.ResponseWriter, *http.Request, interface{}) ([]byte, error)
 
-func (f WriterFunc) Run(w http.ResponseWriter, r *http.Request, status int, data interface{}) ([]byte, error) {
-	return f(w, r, status, data)
+func (f WriterFunc) Run(w http.ResponseWriter, r *http.Request, data interface{}) ([]byte, error) {
+	return f(w, r, data)
 }
 
 func (app *Application) logRequest(next http.HandlerFunc) http.HandlerFunc {
@@ -68,12 +68,12 @@ func (app *Application) extractGZIP(next ReaderFunc) ReaderFunc {
 }
 
 func (app *Application) compactGZIP(next WriterFunc) WriterFunc {
-	return func(w http.ResponseWriter, r *http.Request, status int, data interface{}) ([]byte, error) {
+	return func(w http.ResponseWriter, r *http.Request, data interface{}) ([]byte, error) {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-			return next.Run(w, r, status, data)
+			return next.Run(w, r, data)
 		}
 
-		response, err := next.Run(w, r, status, data)
+		response, err := next.Run(w, r, data)
 		if err != nil {
 			return nil, err
 		}

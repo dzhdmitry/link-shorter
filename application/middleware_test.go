@@ -15,14 +15,14 @@ func testExtract(w http.ResponseWriter, r *http.Request, destination interface{}
 	return nil
 }
 
-func testCompact(w http.ResponseWriter, r *http.Request, status int, data interface{}) ([]byte, error) {
+func testCompact(w http.ResponseWriter, r *http.Request, data interface{}) ([]byte, error) {
 	return []byte("compact"), nil
 }
 
 func TestExtractGZIP(t *testing.T) {
 	app := Application{}
 	w := httptest.NewRecorder()
-	file, err := os.ReadFile("./../tests/compact.gz")
+	file, err := os.ReadFile("./../testdata/compact.gz")
 
 	require.NoError(t, err)
 
@@ -44,11 +44,11 @@ func TestCompactGZIP(t *testing.T) {
 	r := httptest.NewRequest(http.MethodPost, "/generate", nil)
 	r.Header.Set("Accept-Encoding", "gzip")
 
-	result, err := app.compactGZIP(testCompact)(w, r, http.StatusOK, nil)
+	result, err := app.compactGZIP(testCompact)(w, r, nil)
 
 	require.NoError(t, err)
 
-	file, err := os.ReadFile("./../tests/compact.gz")
+	file, err := os.ReadFile("./../testdata/compact.gz")
 
 	require.NoError(t, err)
 	require.Equal(t, file, result)

@@ -44,13 +44,13 @@ func (a *alphabet) letterOfIndex(index int) string {
 }
 
 func Generate(lastKey string, keyMaxLength int) (string, error) {
-	alphabet := newAlphabet()
+	ab := newAlphabet()
 
 	if lastKey == "" {
-		return alphabet.firstLetter(), nil
+		return ab.firstLetter(), nil
 	}
 
-	if lastKey == strings.Repeat(alphabet.lastLetter(), keyMaxLength) {
+	if lastKey == strings.Repeat(ab.lastLetter(), keyMaxLength) {
 		return "", ErrLimitReached
 	}
 
@@ -58,22 +58,22 @@ func Generate(lastKey string, keyMaxLength int) (string, error) {
 
 	for i := len(lastKeySplit) - 1; i >= 0; i-- {
 		letter := lastKeySplit[i]
-		letterIndex := alphabet.indexOfLetter(letter)
+		letterIndex := ab.indexOfLetter(letter)
 
 		// if letter is "z" (last)
-		if letter == alphabet.lastLetter() {
+		if letter == ab.lastLetter() {
 			continue
 		}
 
 		// letter is not last
-		newLetter := alphabet.letterOfIndex(letterIndex + 1)
+		newLetter := ab.letterOfIndex(letterIndex + 1)
 		key := strings.Join(lastKeySplit[:i], "") + newLetter + strings.Join(lastKeySplit[i+1:], "")
 
 		return key, nil
 	}
 
 	// all letters are "z" (last)
-	key := strings.Repeat(alphabet.firstLetter(), len(lastKeySplit)+1)
+	key := strings.Repeat(ab.firstLetter(), len(lastKeySplit)+1)
 
 	return key, nil
 }

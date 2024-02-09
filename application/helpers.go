@@ -10,7 +10,7 @@ import (
 
 type envelope map[string]interface{}
 
-func (app *Application) writeJSON(w http.ResponseWriter, r *http.Request, status int, data interface{}) ([]byte, error) {
+func (app *Application) writeJSON(w http.ResponseWriter, r *http.Request, data interface{}) ([]byte, error) {
 	js, err := json.Marshal(data)
 
 	if err != nil {
@@ -20,7 +20,6 @@ func (app *Application) writeJSON(w http.ResponseWriter, r *http.Request, status
 	js = append(js, '\n')
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
 
 	return js, nil
 }
@@ -71,13 +70,14 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, destina
 }
 
 func (app *Application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message string) {
-	response, err := app.compactGZIP(app.writeJSON)(w, r, status, envelope{"error": message})
+	response, err := app.writeJSON(w, r, envelope{"error": message})
 
 	if err != nil {
 		app.Logger.LogError(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
+	w.WriteHeader(status)
 	_, err = w.Write(response)
 
 	if err != nil {
