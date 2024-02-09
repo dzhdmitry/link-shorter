@@ -25,6 +25,7 @@ type Application struct {
 
 type LinksStorageInterface interface {
 	GenerateKey(URL string) (string, error)
+	GenerateKeys(URLs []string) (map[string]string, error)
 	GetLink(key string) string
 }
 

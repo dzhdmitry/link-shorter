@@ -10,7 +10,7 @@ type testStorage struct {
 	//
 }
 
-func (ts *testStorage) Store(key, URL string) error {
+func (ts *testStorage) StoreURLs(URLs map[string]string) error {
 	return nil
 }
 

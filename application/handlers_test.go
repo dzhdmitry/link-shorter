@@ -21,14 +21,14 @@ type testLinksStorage struct {
 	maxKey  int
 }
 
-func newTestLinkStorage(maxKey int) *testLinksStorage {
+func newTestLinkStorage(maxKey int, links map[int]string) *testLinksStorage {
 	return &testLinksStorage{
-		links:  map[int]string{},
+		links:  links,
 		maxKey: maxKey,
 	}
 }
 
-func (t testLinksStorage) GenerateKey(URL string) (string, error) {
+func (t *testLinksStorage) GenerateKey(URL string) (string, error) {
 	key := t.lastKey + 1
 
 	if key > t.maxKey {
@@ -41,7 +41,18 @@ func (t testLinksStorage) GenerateKey(URL string) (string, error) {
 	return strconv.Itoa(key), nil
 }
 
-func (t testLinksStorage) GetLink(key string) string {
+func (t *testLinksStorage) GenerateKeys(URLs []string) (map[string]string, error) {
+	result := map[string]string{}
+
+	for _, URL := range URLs {
+		r, _ := t.GenerateKey(URL)
+		result[URL] = r
+	}
+
+	return result, nil
+}
+
+func (t *testLinksStorage) GetLink(key string) string {
 	keyInt, _ := strconv.Atoi(key)
 
 	return t.links[keyInt]
@@ -50,7 +61,7 @@ func (t testLinksStorage) GetLink(key string) string {
 func TestIndexHandlerOK(t *testing.T) {
 	app := Application{
 		Logger: Logger{out: io.Discard},
-		Links:  newTestLinkStorage(1),
+		Links:  newTestLinkStorage(1, map[int]string{}),
 	}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/", nil)
@@ -72,7 +83,7 @@ func TestIndexHandlerOK(t *testing.T) {
 func TestGenerateHandlerOK(t *testing.T) {
 	app := Application{
 		Logger: Logger{out: io.Discard},
-		Links:  newTestLinkStorage(1),
+		Links:  newTestLinkStorage(1, map[int]string{}),
 	}
 	w := httptest.NewRecorder()
 	body, _ := json.Marshal(envelope{"url": "https://example.org"})
@@ -96,24 +107,25 @@ func TestGenerateHandlerOK(t *testing.T) {
 func TestGenerateHandlerBadRequest(t *testing.T) {
 	app := Application{
 		Logger: Logger{out: io.Discard},
-		Links:  newTestLinkStorage(0),
+		Links:  newTestLinkStorage(0, map[int]string{}),
 	}
 
 	tests := []struct {
 		name         string
 		request      any
+		expectedCode int
 		errorMessage string
 	}{
-		{"Unknown field", envelope{"unknown": "example"}, `json: unknown field \"unknown\"`},
-		{"Empty body", envelope{}, "URL must be a valid URL string"},
-		{"Too big", envelope{"url": strings.Repeat("1", 2001)}, "URL must be maximum 2000 letters long"},
-		{"Empty url", envelope{"url": ""}, "URL must be a valid URL string"},
-		{"Invalid url #1", envelope{"url": "http"}, "URL must be an absolute URL"},
-		{"Invalid url #2", envelope{"url": "http://"}, "URL must be an absolute URL"},
-		{"Invalid url #3", envelope{"url": "httpss://exmaple.com"}, "URL must begin with http or https"},
-		{"Invalid url #4", envelope{"url": "exmaple.com"}, "URL must be an absolute URL"},
-		{"Invalid url #5", envelope{"url": "/exmaple.com"}, "URL must be an absolute URL"},
-		{"Over limit", envelope{"url": "http://example.com"}, `limit reached`},
+		{"Unknown field", envelope{"unknown": "example"}, http.StatusBadRequest, `json: unknown field \"unknown\"`},
+		{"Empty body", envelope{}, http.StatusUnprocessableEntity, "URL must be a valid URL string"},
+		{"Too big", envelope{"url": strings.Repeat("1", 2001)}, http.StatusUnprocessableEntity, "URL must be maximum 2000 letters long"},
+		{"Empty url", envelope{"url": ""}, http.StatusUnprocessableEntity, "URL must be a valid URL string"},
+		{"Invalid url #1", envelope{"url": "http"}, http.StatusUnprocessableEntity, "URL must be an absolute URL"},
+		{"Invalid url #2", envelope{"url": "http://"}, http.StatusUnprocessableEntity, "URL must be an absolute URL"},
+		{"Invalid url #3", envelope{"url": "httpss://exmaple.com"}, http.StatusUnprocessableEntity, "URL must begin with http or https"},
+		{"Invalid url #4", envelope{"url": "exmaple.com"}, http.StatusUnprocessableEntity, "URL must be an absolute URL"},
+		{"Invalid url #5", envelope{"url": "/exmaple.com"}, http.StatusUnprocessableEntity, "URL must be an absolute URL"},
+		{"Over limit", envelope{"url": "http://example.com"}, http.StatusBadRequest, `limit reached`},
 	}
 
 	for _, tt := range tests {
@@ -127,7 +139,7 @@ func TestGenerateHandlerBadRequest(t *testing.T) {
 			result := w.Result()
 
 			require.Equal(t, "application/json", result.Header.Get("Content-Type"))
-			require.Equal(t, http.StatusBadRequest, result.StatusCode)
+			require.Equal(t, tt.expectedCode, result.StatusCode)
 
 			jsonResponse, err := io.ReadAll(result.Body)
 
@@ -141,14 +153,13 @@ func TestGenerateHandlerBadRequest(t *testing.T) {
 
 func TestGoHandlerOK(t *testing.T) {
 	app := Application{
-		Config: Config{
-			ProjectKeyMaxLength: 5,
-		},
+		Config: Config{ProjectKeyMaxLength: 5},
 		Logger: Logger{out: io.Discard},
-		Links:  newTestLinkStorage(1),
+		Links: newTestLinkStorage(1, map[int]string{
+			1: "https://example.com",
+		}),
 	}
 
-	_, _ = app.Links.GenerateKey("http://example.com")
 	w := httptest.NewRecorder()
 	r := newRequestWithNamedParameter(http.MethodGet, "/go/:key", httprouter.Params{
 		{"key", "1"},
@@ -166,16 +177,14 @@ func TestGoHandlerOK(t *testing.T) {
 	defer result.Body.Close()
 
 	require.NoError(t, err)
-	require.JSONEq(t, `{"link":"http://example.com"}`+"\n", string(jsonResponse))
+	require.JSONEq(t, `{"link":"https://example.com"}`+"\n", string(jsonResponse))
 }
 
 func TestGoHandlerBadRequest(t *testing.T) {
 	app := Application{
-		Config: Config{
-			ProjectKeyMaxLength: 5,
-		},
+		Config: Config{ProjectKeyMaxLength: 5},
 		Logger: Logger{out: io.Discard},
-		Links:  newTestLinkStorage(1),
+		Links:  newTestLinkStorage(1, map[int]string{}),
 	}
 
 	tests := []struct {
@@ -183,8 +192,8 @@ func TestGoHandlerBadRequest(t *testing.T) {
 		key          string
 		errorMessage string
 	}{
-		{"Empty key", "", "Key must be at least 1 letter long"},
-		{"Long key", "123456", "Key is invalid"},
+		{"Empty key", "", "key must be at least 1 letter long"},
+		{"Long key", "123456", "key is invalid"},
 	}
 
 	for _, tt := range tests {
@@ -209,6 +218,58 @@ func TestGoHandlerBadRequest(t *testing.T) {
 			require.JSONEq(t, `{"error":"`+tt.errorMessage+`"}`+"\n", string(jsonResponse))
 		})
 	}
+}
+
+func TestBatchGenerateHandlerOK(t *testing.T) {
+	app := Application{
+		Logger: Logger{out: io.Discard},
+		Links:  newTestLinkStorage(2, map[int]string{}),
+	}
+	w := httptest.NewRecorder()
+	body, _ := json.Marshal([]string{"https://example.org", "https://example2.org"})
+	r := httptest.NewRequest(http.MethodPost, "/batch/generate", bytes.NewReader(body))
+
+	app.batchGenerateHandler(w, r)
+
+	result := w.Result()
+
+	require.Equal(t, "application/json", result.Header.Get("Content-Type"))
+	require.Equal(t, http.StatusOK, result.StatusCode)
+
+	jsonResponse, err := io.ReadAll(result.Body)
+
+	defer result.Body.Close()
+
+	require.NoError(t, err)
+	require.JSONEq(t, `{"links":{"https://example.org":"http://localhost/go/1","https://example2.org":"http://localhost/go/2"}}`+"\n", string(jsonResponse))
+}
+
+func TestBatchGoHandlerOK(t *testing.T) {
+	app := Application{
+		Config: Config{ProjectKeyMaxLength: 5},
+		Logger: Logger{out: io.Discard},
+		Links: newTestLinkStorage(2, map[int]string{
+			1: "https://example.com",
+			2: "https://example2.com",
+		}),
+	}
+	w := httptest.NewRecorder()
+	body, _ := json.Marshal([]string{"1", "2"})
+	r := httptest.NewRequest(http.MethodPost, "/batch/go", bytes.NewReader(body))
+
+	app.batchGoHandler(w, r)
+
+	result := w.Result()
+
+	require.Equal(t, "application/json", result.Header.Get("Content-Type"))
+	require.Equal(t, http.StatusOK, result.StatusCode)
+
+	jsonResponse, err := io.ReadAll(result.Body)
+
+	defer result.Body.Close()
+
+	require.NoError(t, err)
+	require.JSONEq(t, `{"links":{"1":"https://example.com","2":"https://example2.com"}}`+"\n", string(jsonResponse))
 }
 
 func newRequestWithNamedParameter(method, target string, params any) *http.Request {

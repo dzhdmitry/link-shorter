@@ -9,7 +9,7 @@ import (
 func TestStore(t *testing.T) {
 	_ = os.Remove("./../testdata/results/test_store.csv")
 	fs := FileStorage{"./../testdata/results/test_store.csv"}
-	err := fs.Store("test-key", "https://example.com")
+	err := fs.StoreURLs(map[string]string{"test-key": "https://example.com"})
 
 	require.NoError(t, err)
 

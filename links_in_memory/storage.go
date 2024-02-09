@@ -8,7 +8,7 @@ import (
 )
 
 type StorageInterface interface {
-	Store(key, URL string) error
+	StoreURLs(URLs map[string]string) error
 	Restore(map[string]string) (string, error)
 }
 
@@ -16,7 +16,7 @@ type FileStorage struct {
 	Filename string
 }
 
-func (fs *FileStorage) Store(key, URL string) error {
+func (fs *FileStorage) StoreURLs(URLs map[string]string) error {
 	file, err := os.OpenFile(fs.Filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
 	if err != nil {
@@ -28,7 +28,13 @@ func (fs *FileStorage) Store(key, URL string) error {
 	w := csv.NewWriter(file)
 	defer w.Flush()
 
-	if err = w.Write([]string{key, URL}); err != nil {
+	var data [][]string
+
+	for key, URL := range URLs {
+		data = append(data, []string{key, URL})
+	}
+
+	if err = w.WriteAll(data); err != nil {
 		return err
 	}
 
@@ -62,8 +68,9 @@ func (fs *FileStorage) Restore(links map[string]string) (string, error) {
 			return "", errors.New("file has malformed data")
 		}
 
-		links[record[0]] = record[1]
-		lastKey = record[0]
+		key, URL := record[0], record[1]
+		links[key] = URL
+		lastKey = key
 	}
 
 	return lastKey, nil

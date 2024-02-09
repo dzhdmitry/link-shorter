@@ -32,25 +32,51 @@ func NewLinksCollection(storage StorageInterface, keyMaxLength int) (*LinksColle
 }
 
 func (lc *LinksCollection) GenerateKey(URL string) (string, error) {
+	keys, err := lc.GenerateKeys([]string{URL})
+
+	if err != nil {
+		return "", err
+	}
+
+	return keys[URL], nil
+}
+
+func (lc *LinksCollection) GenerateKeys(URLs []string) (map[string]string, error) {
 	lc.mu.Lock()
 
 	defer lc.mu.Unlock()
 
-	key, err := generator.Generate(lc.lastKey, lc.keyMaxLength)
+	urlsByGeneratedKeys := map[string]string{} // -> lc.storage
+	generatedKeysSorted := [][]string{}        // -> lc.links
+	keysByURLs := map[string]string{}          // -> output
+	currentLastKey := lc.lastKey
 
-	if err != nil {
-		return "", err
+	for _, URL := range URLs {
+		key, err := generator.Generate(currentLastKey, lc.keyMaxLength)
+
+		if err != nil {
+			return nil, err
+		}
+
+		urlsByGeneratedKeys[key] = URL
+		generatedKeysSorted = append(generatedKeysSorted, []string{key, URL})
+		currentLastKey = key
 	}
 
-	lc.links[key] = URL
-	lc.lastKey = key
-	err = lc.storage.Store(key, URL)
+	err := lc.storage.StoreURLs(urlsByGeneratedKeys)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return key, nil
+	for _, keyURL := range generatedKeysSorted {
+		key, URL := keyURL[0], keyURL[1]
+		lc.links[key] = URL
+		lc.lastKey = key
+		keysByURLs[URL] = key
+	}
+
+	return keysByURLs, nil
 }
 
 func (lc *LinksCollection) GetLink(key string) string {

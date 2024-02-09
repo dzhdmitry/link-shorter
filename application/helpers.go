@@ -85,3 +85,8 @@ func (app *Application) errorResponse(w http.ResponseWriter, r *http.Request, st
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
+
+func (app *Application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.Logger.LogError(err)
+	app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
+}
