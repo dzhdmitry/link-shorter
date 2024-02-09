@@ -21,7 +21,7 @@ func TestStore(t *testing.T) {
 func TestRestore(t *testing.T) {
 	links := map[string]string{}
 	fs := FileStorage{"./../testdata/test_restore.csv"}
-	err := fs.Restore(links)
+	lastKey, err := fs.Restore(links)
 
 	require.NoError(t, err)
 
@@ -29,4 +29,5 @@ func TestRestore(t *testing.T) {
 	require.Equal(t, "https://example1.com", links["test-key"])
 	require.Equal(t, "https://example2.com", links["test-key2"])
 	require.Equal(t, "https://example3.com", links["test-key3"])
+	require.Equal(t, "test-key3", lastKey)
 }

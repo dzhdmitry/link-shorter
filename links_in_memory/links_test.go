@@ -14,8 +14,8 @@ func (ts *testStorage) Store(key, URL string) error {
 	return nil
 }
 
-func (ts *testStorage) Restore(m map[string]string) error {
-	return nil
+func (ts *testStorage) Restore(m map[string]string) (string, error) {
+	return "", nil
 }
 
 func TestGenerateKey(t *testing.T) {

@@ -20,9 +20,13 @@ func NewLinksCollection(storage StorageInterface, keyMaxLength int) (*LinksColle
 		storage:      storage,
 	}
 
-	if err := storage.Restore(lc.links); err != nil {
+	lastKey, err := storage.Restore(lc.links)
+
+	if err != nil {
 		return nil, err
 	}
+
+	lc.lastKey = lastKey
 
 	return lc, nil
 }
