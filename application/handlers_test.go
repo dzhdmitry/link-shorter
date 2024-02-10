@@ -153,8 +153,8 @@ func TestGenerateHandlerBadRequest(t *testing.T) {
 
 func TestGoHandlerOK(t *testing.T) {
 	app := Application{
-		Config: Config{ProjectKeyMaxLength: 5},
-		Logger: Logger{out: io.Discard},
+		Logger:    Logger{out: io.Discard},
+		Validator: Validator{KeyMaxLength: 5},
 		Links: newTestLinkStorage(1, map[int]string{
 			1: "https://example.com",
 		}),
@@ -246,8 +246,8 @@ func TestBatchGenerateHandlerOK(t *testing.T) {
 
 func TestBatchGoHandlerOK(t *testing.T) {
 	app := Application{
-		Config: Config{ProjectKeyMaxLength: 5},
-		Logger: Logger{out: io.Discard},
+		Logger:    Logger{out: io.Discard},
+		Validator: Validator{KeyMaxLength: 5},
 		Links: newTestLinkStorage(2, map[int]string{
 			1: "https://example.com",
 			2: "https://example2.com",

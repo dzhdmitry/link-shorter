@@ -6,6 +6,7 @@ import (
 )
 
 type LinksCollection struct {
+	generator    generator.Generator
 	links        map[string]string
 	lastKey      string
 	keyMaxLength int
@@ -13,8 +14,9 @@ type LinksCollection struct {
 	mu           sync.Mutex
 }
 
-func NewLinksCollection(storage StorageInterface, keyMaxLength int) (*LinksCollection, error) {
+func NewLinksCollection(gen generator.Generator, storage StorageInterface, keyMaxLength int) (*LinksCollection, error) {
 	lc := &LinksCollection{
+		generator:    gen,
 		links:        map[string]string{},
 		keyMaxLength: keyMaxLength,
 		storage:      storage,
@@ -52,7 +54,7 @@ func (lc *LinksCollection) GenerateKeys(URLs []string) (map[string]string, error
 	currentLastKey := lc.lastKey
 
 	for _, URL := range URLs {
-		key, err := generator.Generate(currentLastKey, lc.keyMaxLength)
+		key, err := lc.generator.Generate(currentLastKey, lc.keyMaxLength)
 
 		if err != nil {
 			return nil, err

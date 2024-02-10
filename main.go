@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/caarlos0/env/v10"
 	"link-shorter.dzhdmitry.net/application"
+	"link-shorter.dzhdmitry.net/generator"
 	"link-shorter.dzhdmitry.net/links_in_memory"
 	"os"
 	"strconv"
@@ -23,8 +24,9 @@ func main() {
 	flag.IntVar(&config.ProjectKeyMaxLength, "key_max_length", config.ProjectKeyMaxLength, "Max length of the key")
 	flag.Parse()
 
+	gen := generator.NewGenerator()
 	storage := &links_in_memory.FileStorage{Filename: "tmp/storage.csv"}
-	links, err := links_in_memory.NewLinksCollection(storage, config.ProjectKeyMaxLength)
+	links, err := links_in_memory.NewLinksCollection(*gen, storage, config.ProjectKeyMaxLength)
 
 	if err != nil {
 		logger.LogError(err)
@@ -34,7 +36,10 @@ func main() {
 	app := application.Application{
 		Config: config,
 		Logger: *logger,
-		Links:  links,
+		Validator: application.Validator{
+			KeyMaxLength: config.ProjectKeyMaxLength,
+		},
+		Links: links,
 	}
 
 	logger.LogInfo("Start server on " + config.ProjectHost + ":" + strconv.Itoa(config.ProjectPort))

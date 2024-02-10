@@ -18,9 +18,10 @@ type Config struct {
 }
 
 type Application struct {
-	Config Config
-	Logger Logger
-	Links  LinksStorageInterface
+	Config    Config
+	Logger    Logger
+	Validator Validator
+	Links     LinksStorageInterface
 }
 
 type LinksStorageInterface interface {

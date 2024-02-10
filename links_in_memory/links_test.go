@@ -3,6 +3,7 @@ package links_in_memory
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"link-shorter.dzhdmitry.net/generator"
 	"testing"
 )
 
@@ -19,7 +20,7 @@ func (ts *testStorage) Restore(m map[string]string) (string, error) {
 }
 
 func TestGenerateKey(t *testing.T) {
-	lc, err := NewLinksCollection(&testStorage{}, 5)
+	lc, err := NewLinksCollection(*generator.NewGenerator(), &testStorage{}, 5)
 
 	require.NoError(t, err)
 
@@ -34,7 +35,7 @@ func TestGenerateKey(t *testing.T) {
 }
 
 func TestGetLink(t *testing.T) {
-	lc, err := NewLinksCollection(&testStorage{}, 5)
+	lc, err := NewLinksCollection(*generator.NewGenerator(), &testStorage{}, 5)
 
 	require.NoError(t, err)
 

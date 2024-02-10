@@ -23,10 +23,11 @@ func TestGenerate(t *testing.T) {
 		{"Random #2", "2v15ia120eu9vaf5du8i", "2v15ia120eu9vaf5du8j"},
 		{"Under limit", "yzzzzzzzzzzz", "zzzzzzzzzzzz"},
 	}
+	g := NewGenerator()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			key, err := Generate(tt.lastKey, 12)
+			key, err := g.Generate(tt.lastKey, 12)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, key)
@@ -35,7 +36,8 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestGenerateLimit(t *testing.T) {
-	key, err := Generate("zzzzzzzzzzzz", 12)
+	g := NewGenerator()
+	key, err := g.Generate("zzzzzzzzzzzz", 12)
 
 	assert.Error(t, err)
 	assert.Empty(t, key)

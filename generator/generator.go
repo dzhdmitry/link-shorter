@@ -6,15 +6,10 @@ import (
 )
 
 var ErrLimitReached = errors.New("limit reached")
+var Letters = "0123456789abcdefghijklmnopqrstuvwxyz"
 
 type alphabet struct {
 	letters []string
-}
-
-func newAlphabet() *alphabet {
-	letters := strings.Split("0123456789abcdefghijklmnopqrstuvwxyz", "")
-
-	return &alphabet{letters: letters}
 }
 
 func (a *alphabet) firstLetter() string {
@@ -43,14 +38,22 @@ func (a *alphabet) letterOfIndex(index int) string {
 	return a.letters[index]
 }
 
-func Generate(lastKey string, keyMaxLength int) (string, error) {
-	ab := newAlphabet()
+type Generator struct {
+	alphabet *alphabet
+}
 
+func NewGenerator() *Generator {
+	return &Generator{alphabet: &alphabet{
+		letters: strings.Split(Letters, ""),
+	}}
+}
+
+func (g *Generator) Generate(lastKey string, keyMaxLength int) (string, error) {
 	if lastKey == "" {
-		return ab.firstLetter(), nil
+		return g.alphabet.firstLetter(), nil
 	}
 
-	if lastKey == strings.Repeat(ab.lastLetter(), keyMaxLength) {
+	if lastKey == strings.Repeat(g.alphabet.lastLetter(), keyMaxLength) {
 		return "", ErrLimitReached
 	}
 
@@ -58,22 +61,22 @@ func Generate(lastKey string, keyMaxLength int) (string, error) {
 
 	for i := len(lastKeySplit) - 1; i >= 0; i-- {
 		letter := lastKeySplit[i]
-		letterIndex := ab.indexOfLetter(letter)
+		letterIndex := g.alphabet.indexOfLetter(letter)
 
 		// if letter is "z" (last)
-		if letter == ab.lastLetter() {
+		if letter == g.alphabet.lastLetter() {
 			continue
 		}
 
 		// letter is not last
-		newLetter := ab.letterOfIndex(letterIndex + 1)
+		newLetter := g.alphabet.letterOfIndex(letterIndex + 1)
 		key := strings.Join(lastKeySplit[:i], "") + newLetter + strings.Join(lastKeySplit[i+1:], "")
 
 		return key, nil
 	}
 
 	// all letters are "z" (last)
-	key := strings.Repeat(ab.firstLetter(), len(lastKeySplit)+1)
+	key := strings.Repeat(g.alphabet.firstLetter(), len(lastKeySplit)+1)
 
 	return key, nil
 }

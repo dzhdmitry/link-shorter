@@ -25,7 +25,7 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = validateURL(data.URL)
+	err = app.Validator.validateURL(data.URL)
 
 	if err != nil {
 		app.errorResponse(w, r, http.StatusUnprocessableEntity, err.Error())
@@ -50,6 +50,8 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -63,7 +65,7 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 	key := httprouter.ParamsFromContext(r.Context()).ByName("key")
 
-	if err := validateKey(key, app.Config.ProjectKeyMaxLength); err != nil {
+	if err := app.Validator.validateKey(key); err != nil {
 		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 
 		return
@@ -81,6 +83,8 @@ func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -102,7 +106,7 @@ func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = validateURLs(data)
+	err = app.Validator.validateURLs(data)
 
 	if err != nil {
 		app.errorResponse(w, r, http.StatusUnprocessableEntity, err.Error())
@@ -132,6 +136,8 @@ func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Requ
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -153,7 +159,7 @@ func (app *Application) batchGoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = validateKeys(data, app.Config.ProjectKeyMaxLength)
+	err = app.Validator.validateKeys(data)
 
 	if err != nil {
 		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
@@ -168,6 +174,8 @@ func (app *Application) batchGoHandler(w http.ResponseWriter, r *http.Request) {
 
 		if fullLinks[key] == "" {
 			app.errorResponse(w, r, http.StatusNotFound, "Full link not found for key "+key)
+
+			return
 		}
 	}
 
@@ -175,6 +183,8 @@ func (app *Application) batchGoHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

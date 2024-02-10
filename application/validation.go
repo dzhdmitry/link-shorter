@@ -2,24 +2,45 @@ package application
 
 import (
 	"errors"
+	"link-shorter.dzhdmitry.net/generator"
 	"net/url"
 )
 
-func validateKey(key string, maxLength int) error {
+type Validator struct {
+	KeyMaxLength int
+}
+
+func (v *Validator) validateKey(key string) error {
 	if key == "" {
 		return errors.New("key must be at least 1 letter long")
 	}
 
-	if len(key) > maxLength {
+	if len(key) > v.KeyMaxLength {
 		return errors.New("key is invalid")
+	}
+
+	for _, keyLetter := range key {
+		found := false
+
+		for _, generatorLetter := range generator.Letters {
+			if keyLetter == generatorLetter {
+				found = true
+
+				break
+			}
+		}
+
+		if !found {
+			return errors.New("invalid letter")
+		}
 	}
 
 	return nil
 }
 
-func validateKeys(keys []string, maxLength int) error {
+func (v *Validator) validateKeys(keys []string) error {
 	for _, key := range keys {
-		if err := validateKey(key, maxLength); err != nil {
+		if err := v.validateKey(key); err != nil {
 			return err
 		}
 	}
@@ -27,7 +48,7 @@ func validateKeys(keys []string, maxLength int) error {
 	return nil
 }
 
-func validateURL(URL string) error {
+func (v *Validator) validateURL(URL string) error {
 	if len(URL) > 2000 {
 		return errors.New("URL must be maximum 2000 letters long")
 	}
@@ -49,11 +70,11 @@ func validateURL(URL string) error {
 	return nil
 }
 
-func validateURLs(URLs []string) error {
+func (v *Validator) validateURLs(URLs []string) error {
 	uniqueURLs := map[string]bool{}
 
 	for _, URL := range URLs {
-		err := validateURL(URL)
+		err := v.validateURL(URL)
 
 		if err != nil {
 			return err
