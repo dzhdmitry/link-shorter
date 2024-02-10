@@ -45,7 +45,12 @@ func (t *testLinksStorage) GenerateKeys(URLs []string) (map[string]string, error
 	result := map[string]string{}
 
 	for _, URL := range URLs {
-		r, _ := t.GenerateKey(URL)
+		r, err := t.GenerateKey(URL)
+
+		if err != nil {
+			return nil, err
+		}
+
 		result[URL] = r
 	}
 
@@ -244,6 +249,46 @@ func TestBatchGenerateHandlerOK(t *testing.T) {
 	require.JSONEq(t, `{"links":{"https://example.org":"http://localhost/go/1","https://example2.org":"http://localhost/go/2"}}`+"\n", string(jsonResponse))
 }
 
+func TestBatchGenerateHandlerBadRequest(t *testing.T) {
+	app := Application{
+		Logger: Logger{out: io.Discard},
+		Links:  newTestLinkStorage(2, map[int]string{}),
+	}
+
+	tests := []struct {
+		name         string
+		request      any
+		expectedCode int
+		errorMessage string
+	}{
+		{"Unknown field", envelope{"unknown": "example"}, http.StatusBadRequest, `body contains incorrect JSON type (at character 1)`},
+		{"Empty url", []string{"link"}, http.StatusUnprocessableEntity, `URL must be an absolute URL`},
+		{"Limit reached", []string{"https://a1.com", "https://a2.com", "https://a3.com"}, http.StatusBadRequest, `limit reached`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			body, _ := json.Marshal(tt.request)
+			r := httptest.NewRequest(http.MethodPost, "/batch/generate", bytes.NewReader(body))
+
+			app.batchGenerateHandler(w, r)
+
+			result := w.Result()
+
+			require.Equal(t, "application/json", result.Header.Get("Content-Type"))
+			require.Equal(t, tt.expectedCode, result.StatusCode)
+
+			jsonResponse, err := io.ReadAll(result.Body)
+
+			defer result.Body.Close()
+
+			require.NoError(t, err)
+			require.JSONEq(t, `{"error":"`+tt.errorMessage+`"}`+"\n", string(jsonResponse))
+		})
+	}
+}
+
 func TestBatchGoHandlerOK(t *testing.T) {
 	app := Application{
 		Logger:    Logger{out: io.Discard},
@@ -270,6 +315,49 @@ func TestBatchGoHandlerOK(t *testing.T) {
 
 	require.NoError(t, err)
 	require.JSONEq(t, `{"links":{"1":"https://example.com","2":"https://example2.com"}}`+"\n", string(jsonResponse))
+}
+
+func TestBatchGoHandlerBadRequest(t *testing.T) {
+	app := Application{
+		Logger:    Logger{out: io.Discard},
+		Validator: Validator{KeyMaxLength: 5},
+		Links: newTestLinkStorage(2, map[int]string{
+			1: "http://example.com",
+		}),
+	}
+
+	tests := []struct {
+		name         string
+		request      any
+		expectedCode int
+		errorMessage string
+	}{
+		{"Unknown field", envelope{"unknown": "example"}, http.StatusBadRequest, `body contains incorrect JSON type (at character 1)`},
+		{"Invalid key", []string{"й"}, http.StatusUnprocessableEntity, `invalid letter`},
+		{"Not found", []string{"9"}, http.StatusNotFound, `Full link not found for key 9`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			body, _ := json.Marshal(tt.request)
+			r := httptest.NewRequest(http.MethodPost, "/batch/go", bytes.NewReader(body))
+
+			app.batchGoHandler(w, r)
+
+			result := w.Result()
+
+			require.Equal(t, "application/json", result.Header.Get("Content-Type"))
+			//require.Equal(t, tt.expectedCode, result.StatusCode)
+
+			jsonResponse, err := io.ReadAll(result.Body)
+
+			defer result.Body.Close()
+
+			require.NoError(t, err)
+			require.JSONEq(t, `{"error":"`+tt.errorMessage+`"}`+"\n", string(jsonResponse))
+		})
+	}
 }
 
 func newRequestWithNamedParameter(method, target string, params any) *http.Request {
