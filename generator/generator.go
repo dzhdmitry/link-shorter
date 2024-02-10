@@ -39,21 +39,25 @@ func (a *alphabet) letterOfIndex(index int) string {
 }
 
 type Generator struct {
-	alphabet *alphabet
+	alphabet     *alphabet
+	keyMaxLength int
 }
 
-func NewGenerator() *Generator {
-	return &Generator{alphabet: &alphabet{
-		letters: strings.Split(Letters, ""),
-	}}
+func NewGenerator(keyMaxLength int) *Generator {
+	return &Generator{
+		alphabet: &alphabet{
+			letters: strings.Split(Letters, ""),
+		},
+		keyMaxLength: keyMaxLength,
+	}
 }
 
-func (g *Generator) Generate(lastKey string, keyMaxLength int) (string, error) {
+func (g *Generator) Generate(lastKey string) (string, error) {
 	if lastKey == "" {
 		return g.alphabet.firstLetter(), nil
 	}
 
-	if lastKey == strings.Repeat(g.alphabet.lastLetter(), keyMaxLength) {
+	if lastKey == strings.Repeat(g.alphabet.lastLetter(), g.keyMaxLength) {
 		return "", ErrLimitReached
 	}
 
@@ -79,4 +83,23 @@ func (g *Generator) Generate(lastKey string, keyMaxLength int) (string, error) {
 	key := strings.Repeat(g.alphabet.firstLetter(), len(lastKeySplit)+1)
 
 	return key, nil
+}
+
+// GenerateMany returns slice of slices [["key1", "URL1"], ["key2", "URL2"], ...]
+func (g *Generator) GenerateMany(lastKey string, URLs []string) ([][]string, error) {
+	generatedKeysSorted := [][]string{}
+	currentLastKey := lastKey
+
+	for _, URL := range URLs {
+		key, err := g.Generate(currentLastKey)
+
+		if err != nil {
+			return nil, err
+		}
+
+		generatedKeysSorted = append(generatedKeysSorted, []string{key, URL})
+		currentLastKey = key
+	}
+
+	return generatedKeysSorted, nil
 }

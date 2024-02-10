@@ -12,22 +12,27 @@ import (
 )
 
 type Config struct {
-	ProjectHost         string `env:"PROJECT_HOST"`
-	ProjectPort         int    `env:"PROJECT_PORT"`
-	ProjectKeyMaxLength int    `env:"PROJECT_KEY_MAX_LENGTH"`
+	ProjectHost          string `env:"PROJECT_HOST"`
+	ProjectPort          int    `env:"PROJECT_PORT"`
+	ProjectKeyMaxLength  int    `env:"PROJECT_KEY_MAX_LENGTH"`
+	ProjectStorageType   string `env:"PROJECT_STORAGE_TYPE"`
+	DatabaseDSN          string `env:"DATABASE_DSN"`
+	DatabaseMaxOpenConns int    `env:"DATABASE_MAX_OPEN_CONNS"`
+	DatabaseMaxIdleConns int    `env:"DATABASE_MAX_IDLE_CONNS"`
+	DatabaseMaxIdleTime  string `env:"DATABASE_MAX_OPEN_TIME"`
 }
 
 type Application struct {
 	Config    Config
 	Logger    Logger
 	Validator Validator
-	Links     LinksStorageInterface
+	Links     LinksCollectionInterface
 }
 
-type LinksStorageInterface interface {
+type LinksCollectionInterface interface {
 	GenerateKey(URL string) (string, error)
 	GenerateKeys(URLs []string) (map[string]string, error)
-	GetLink(key string) string
+	GetURL(key string) (string, error)
 }
 
 func (app *Application) Serve() error {

@@ -15,20 +15,20 @@ import (
 	"testing"
 )
 
-type testLinksStorage struct {
+type testLinksCollection struct {
 	links   map[int]string
 	lastKey int
 	maxKey  int
 }
 
-func newTestLinkStorage(maxKey int, links map[int]string) *testLinksStorage {
-	return &testLinksStorage{
+func newTestLinkStorage(maxKey int, links map[int]string) *testLinksCollection {
+	return &testLinksCollection{
 		links:  links,
 		maxKey: maxKey,
 	}
 }
 
-func (t *testLinksStorage) GenerateKey(URL string) (string, error) {
+func (t *testLinksCollection) GenerateKey(URL string) (string, error) {
 	key := t.lastKey + 1
 
 	if key > t.maxKey {
@@ -41,7 +41,7 @@ func (t *testLinksStorage) GenerateKey(URL string) (string, error) {
 	return strconv.Itoa(key), nil
 }
 
-func (t *testLinksStorage) GenerateKeys(URLs []string) (map[string]string, error) {
+func (t *testLinksCollection) GenerateKeys(URLs []string) (map[string]string, error) {
 	result := map[string]string{}
 
 	for _, URL := range URLs {
@@ -57,10 +57,10 @@ func (t *testLinksStorage) GenerateKeys(URLs []string) (map[string]string, error
 	return result, nil
 }
 
-func (t *testLinksStorage) GetLink(key string) string {
+func (t *testLinksCollection) GetURL(key string) (string, error) {
 	keyInt, _ := strconv.Atoi(key)
 
-	return t.links[keyInt]
+	return t.links[keyInt], nil
 }
 
 func TestIndexHandlerOK(t *testing.T) {

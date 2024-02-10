@@ -1,0 +1,4 @@
+DROP INDEX IF EXISTS links_url_idx;
+DROP INDEX IF EXISTS links_key_idx;
+
+DROP TABLE IF EXISTS links;

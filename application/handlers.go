@@ -71,7 +71,13 @@ func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fullLink := app.Links.GetLink(key)
+	fullLink, err := app.Links.GetURL(key)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+
+		return
+	}
 
 	if fullLink == "" {
 		app.errorResponse(w, r, http.StatusNotFound, "Full link not found for key "+key)
@@ -170,7 +176,13 @@ func (app *Application) batchGoHandler(w http.ResponseWriter, r *http.Request) {
 	fullLinks := make(map[string]interface{}, len(data))
 
 	for _, key := range data {
-		fullLinks[key] = app.Links.GetLink(key)
+		fullLinks[key], err = app.Links.GetURL(key)
+
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+
+			return
+		}
 
 		if fullLinks[key] == "" {
 			app.errorResponse(w, r, http.StatusNotFound, "Full link not found for key "+key)

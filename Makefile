@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: build up down ps bash test test-coverage
+.PHONY: build up down ps bash migration docker test test-coverage
 
 build:
 	docker-compose build
@@ -16,6 +16,12 @@ ps:
 
 bash:
 	docker-compose exec go bash
+
+migration:
+	docker-compose exec go migrate create -seq -ext=.sql -dir=./migrations ${name}
+
+migrate:
+	docker-compose exec go migrate -path=./migrations -database=${DATABASE_DSN} up
 
 test:
 	docker-compose exec go go test ./...

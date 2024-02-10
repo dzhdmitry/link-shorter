@@ -1,5 +1,8 @@
 version: '3.8'
 
+volumes:
+  postgres_data:
+
 services:
   go:
     build:
@@ -12,7 +15,21 @@ services:
       - "${PROJECT_PORT}:${PROJECT_PORT}"
     volumes:
       - ./:/app
+    depends_on:
+      - postgres
     env_file:
       - .env
     stop_signal: SIGINT
     stop_grace_period: ${STOP_GRACE_PERIOD}
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      PGPORT: 5432
+      POSTGRES_DB: short_links
+      POSTGRES_PASSWORD: pa55word
+      POSTGRES_USER: go
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
