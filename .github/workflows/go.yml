@@ -46,5 +46,5 @@ jobs:
       run: go test -v ./...
       env:
         POSTGRES_HOST: postgres
-        TEST_DEFAULT_DSN: postgres://go:pa55word@postgres:5432/postgres?sslmode=disable
-        TEST_DSN: postgres://go:pa55word@postgres:5432/short_links_test?sslmode=disable
+        TEST_DEFAULT_DSN: postgres://go:pa55word@postgres:5432/postgres
+        TEST_DSN: postgres://go:pa55word@postgres:5432/short_links_test
