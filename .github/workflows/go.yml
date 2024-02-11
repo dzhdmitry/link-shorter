@@ -19,6 +19,7 @@ jobs:
         image: postgres:13-alpine
         env:
           PGPORT: 5432
+          POSTGRES_PORT: 5432
           POSTGRES_DB: short_links
           POSTGRES_PASSWORD: pa55word
           POSTGRES_USER: go
