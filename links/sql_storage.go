@@ -3,11 +3,8 @@ package links
 import (
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"time"
 )
@@ -17,97 +14,6 @@ type StorageInterface interface {
 	Restore() error
 	GetURL(string) (string, error)
 	GetLastKey() (string, error)
-}
-
-type FileStorage struct {
-	filename string
-	links    map[string]string
-	lastKey  string
-}
-
-func NewFileStorage(filename string) (*FileStorage, error) {
-	s := FileStorage{filename: filename, links: map[string]string{}}
-	err := s.Restore()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &s, nil
-}
-
-func (fs *FileStorage) StoreKeysURLs(keysURLs [][]string) error {
-	file, err := os.OpenFile(fs.filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	w := csv.NewWriter(file)
-	defer w.Flush()
-
-	if err = w.WriteAll(keysURLs); err != nil {
-		return err
-	}
-
-	for _, ku := range keysURLs {
-		key, URL := ku[0], ku[1]
-		fs.links[key] = URL
-		fs.lastKey = key
-	}
-
-	return nil
-}
-
-func (fs *FileStorage) Restore() error {
-	file, err := os.Open(fs.filename)
-
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
-		}
-
-		return err
-	}
-
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	lastKey := ""
-
-	for {
-		record, err := reader.Read()
-
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if len(record) != 2 {
-			return errors.New("file has malformed data")
-		}
-
-		key, URL := record[0], record[1]
-		fs.links[key] = URL
-		lastKey = key
-	}
-
-	fs.lastKey = lastKey
-
-	return nil
-}
-
-func (fs *FileStorage) GetURL(key string) (string, error) {
-	return fs.links[key], nil
-}
-
-func (fs *FileStorage) GetLastKey() (string, error) {
-	return fs.lastKey, nil
 }
 
 type SQLStorage struct {

@@ -16,6 +16,7 @@ type Config struct {
 	ProjectPort          int    `env:"PROJECT_PORT"`
 	ProjectKeyMaxLength  int    `env:"PROJECT_KEY_MAX_LENGTH"`
 	ProjectStorageType   string `env:"PROJECT_STORAGE_TYPE"`
+	FileAsync            bool   `env:"FILE_ASYNC"`
 	DatabaseDSN          string `env:"DATABASE_DSN"`
 	DatabaseMaxOpenConns int    `env:"DATABASE_MAX_OPEN_CONNS"`
 	DatabaseMaxIdleConns int    `env:"DATABASE_MAX_IDLE_CONNS"`

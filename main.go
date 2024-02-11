@@ -25,6 +25,7 @@ func main() {
 	flag.IntVar(&config.ProjectPort, "port", config.ProjectPort, "Project server port")
 	flag.IntVar(&config.ProjectKeyMaxLength, "key_max_length", config.ProjectKeyMaxLength, "Max length of the key")
 	flag.StringVar(&config.ProjectStorageType, "storage", config.ProjectStorageType, "Storage type (file|postgres)")
+	flag.BoolVar(&config.FileAsync, "file-async", config.FileAsync, "File storage is asynchronous|synchronous (true|false)")
 	flag.StringVar(&config.DatabaseDSN, "db-dsn", config.DatabaseDSN, "PostgreSQL DSN")
 	flag.IntVar(&config.DatabaseMaxOpenConns, "db-max-open-conns", config.DatabaseMaxOpenConns, "PostgreSQL max open connections")
 	flag.IntVar(&config.DatabaseMaxIdleConns, "db-max-idle-conns", config.DatabaseMaxIdleConns, "PostgreSQL max idle connections")
@@ -36,7 +37,11 @@ func main() {
 	var err error
 
 	if config.ProjectStorageType == "file" {
-		storage, err = links.NewFileStorage("tmp/storage.csv")
+		if config.FileAsync {
+			storage, err = links.NewFileStorageAsync(*logger, "tmp/storage.csv")
+		} else {
+			storage, err = links.NewFileStorage("tmp/storage.csv")
+		}
 	} else if config.ProjectStorageType == "postgres" {
 		dbx, errDB := db.Open(config.DatabaseDSN, config.DatabaseMaxOpenConns, config.DatabaseMaxIdleConns, config.DatabaseMaxIdleTime)
 
