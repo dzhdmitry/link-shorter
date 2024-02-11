@@ -44,12 +44,6 @@ func Open(dsn string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*
 func ResolveTestDSNs() (string, string) {
 	defaultDsn := os.Getenv("TEST_DEFAULT_DSN")
 
-	fmt.Println("POSTGRES_HOST:")
-	fmt.Println(os.Getenv("POSTGRES_HOST"))
-
-	fmt.Println("TEST_DEFAULT_DSN:")
-	fmt.Println(os.Getenv("TEST_DEFAULT_DSN"))
-
 	if defaultDsn == "" {
 		defaultDsn = "postgres://go:pa55word@localhost:5432/postgres?sslmode=disable"
 	}
