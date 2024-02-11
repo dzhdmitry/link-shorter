@@ -20,7 +20,7 @@ jobs:
         env:
           PGPORT: 5432
           POSTGRES_PORT: 5432
-          POSTGRES_DB: short_links
+          POSTGRES_DB: short_links_test
           POSTGRES_PASSWORD: pa55word
           POSTGRES_USER: root
         options: >-
@@ -46,5 +46,5 @@ jobs:
       run: go test -v ./...
       env:
         POSTGRES_HOST: postgres
-        TEST_DEFAULT_DSN: postgres://root:pa55word@postgres:5432/postgres?sslmode=disable
+        TEST_DEFAULT_DSN: postgres://root:pa55word@postgres:5432/short_links_test?sslmode=disable
         TEST_DSN: postgres://root:pa55word@postgres:5432/short_links_test?sslmode=disable
