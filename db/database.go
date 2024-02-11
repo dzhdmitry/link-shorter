@@ -68,6 +68,9 @@ func PrepareTestDB() string {
 	db, err := Open(defaultDsn, 25, 25, "15m")
 
 	if err != nil {
+		fmt.Println("failed:")
+		fmt.Println(defaultDsn)
+
 		panic(err)
 	}
 
