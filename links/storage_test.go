@@ -128,7 +128,7 @@ func (s *SQLStorageSuite) TestStoreKeysURLs() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			storage, err := NewSQLStorage(s.db)
+			storage, err := NewSQLStorage(s.db, 1)
 
 			s.NoError(err)
 
@@ -143,7 +143,7 @@ func (s *SQLStorageSuite) TestRestore() {
 	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('prev', 'prev-url')")
 	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('last', 'url')")
 
-	storage, err := NewSQLStorage(s.db)
+	storage, err := NewSQLStorage(s.db, 1)
 
 	s.NoError(err)
 
@@ -165,7 +165,7 @@ func (s *SQLStorageSuite) TestGetURL() {
 	}
 
 	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('1q2w', 'https://example.com')")
-	storage, err := NewSQLStorage(s.db)
+	storage, err := NewSQLStorage(s.db, 1)
 
 	s.NoError(err)
 

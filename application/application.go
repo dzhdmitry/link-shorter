@@ -20,6 +20,7 @@ type Config struct {
 	DatabaseMaxOpenConns int    `env:"DATABASE_MAX_OPEN_CONNS"`
 	DatabaseMaxIdleConns int    `env:"DATABASE_MAX_IDLE_CONNS"`
 	DatabaseMaxIdleTime  string `env:"DATABASE_MAX_OPEN_TIME"`
+	DatabaseTimeout      int    `env:"DATABASE_TIMEOUT"`
 }
 
 type Application struct {

@@ -29,6 +29,7 @@ func main() {
 	flag.IntVar(&config.DatabaseMaxOpenConns, "db-max-open-conns", config.DatabaseMaxOpenConns, "PostgreSQL max open connections")
 	flag.IntVar(&config.DatabaseMaxIdleConns, "db-max-idle-conns", config.DatabaseMaxIdleConns, "PostgreSQL max idle connections")
 	flag.StringVar(&config.DatabaseMaxIdleTime, "db-max-idle-time", config.DatabaseMaxIdleTime, "PostgreSQL max connection idle time")
+	flag.IntVar(&config.DatabaseTimeout, "db-timeout", config.DatabaseTimeout, "PostgreSQL queries execution timeout")
 	flag.Parse()
 
 	var storage links.StorageInterface
@@ -46,7 +47,7 @@ func main() {
 
 		defer dbx.Close()
 
-		storage, err = links.NewSQLStorage(dbx)
+		storage, err = links.NewSQLStorage(dbx, config.DatabaseTimeout)
 	} else {
 		logger.LogError(errors.New("unknown type " + config.ProjectStorageType))
 		os.Exit(1)

@@ -112,11 +112,15 @@ func (fs *FileStorage) GetLastKey() (string, error) {
 
 type SQLStorage struct {
 	db      *sql.DB
+	timeout time.Duration
 	lastKey string
 }
 
-func NewSQLStorage(db *sql.DB) (*SQLStorage, error) {
-	s := SQLStorage{db: db}
+func NewSQLStorage(db *sql.DB, timeout int) (*SQLStorage, error) {
+	s := SQLStorage{
+		db:      db,
+		timeout: time.Second * time.Duration(timeout),
+	}
 	err := s.Restore()
 
 	if err != nil {
@@ -131,7 +135,7 @@ func (s *SQLStorage) StoreKeysURLs(keysURLs [][]string) error {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 
 	defer cancel()
 
@@ -159,7 +163,7 @@ func (s *SQLStorage) StoreKeysURLs(keysURLs [][]string) error {
 }
 
 func (s *SQLStorage) Restore() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 
 	defer cancel()
 
@@ -182,7 +186,7 @@ func (s *SQLStorage) Restore() error {
 }
 
 func (s *SQLStorage) GetURL(key string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 
 	defer cancel()
 
