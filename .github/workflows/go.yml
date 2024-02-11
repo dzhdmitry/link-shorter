@@ -22,7 +22,7 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_DB: short_links
           POSTGRES_PASSWORD: pa55word
-          POSTGRES_USER: go
+          POSTGRES_USER: root
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -46,5 +46,5 @@ jobs:
       run: go test -v ./...
       env:
         POSTGRES_HOST: postgres
-        TEST_DEFAULT_DSN: postgres://go:pa55word@postgres:5432/postgres
-        TEST_DSN: postgres://go:pa55word@postgres:5432/short_links_test
+        TEST_DEFAULT_DSN: postgres://root:pa55word@postgres:5432/postgres?sslmode=disable
+        TEST_DSN: postgres://root:pa55word@postgres:5432/short_links_test?sslmode=disable
