@@ -16,7 +16,7 @@ jobs:
     
     services:
       postgres:
-        image: postgres
+        image: postgres:13-alpine
         env:
           PGPORT: 5432
           POSTGRES_DB: short_links
