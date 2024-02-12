@@ -98,6 +98,7 @@ type LinksCollectionInterface interface {
 	GenerateKey(URL string) (string, error)
 	GenerateKeys(URLs []string) (map[string]string, error)
 	GetURL(key string) (string, error)
+	GetURLs(keys []string) (map[string]string, error)
 }
 
 func (app *Application) Serve() error {

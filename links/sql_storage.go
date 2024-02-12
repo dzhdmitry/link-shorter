@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -13,6 +14,7 @@ type StorageInterface interface {
 	StoreKeysURLs([][]string) error
 	Restore() error
 	GetURL(string) (string, error)
+	GetURLs([]string) (map[string]string, error)
 	GetLastKey() (string, error)
 }
 
@@ -109,6 +111,49 @@ func (s *SQLStorage) GetURL(key string) (string, error) {
 	}
 
 	return URL, nil
+}
+
+func (s *SQLStorage) GetURLs(keys []string) (map[string]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
+
+	defer cancel()
+
+	var placeholders []string
+	var values []interface{}
+
+	for i, key := range keys {
+		placeholders = append(placeholders, fmt.Sprintf("$%d", i+1))
+		values = append(values, key)
+	}
+
+	query := "SELECT key, url FROM links WHERE key IN (" + strings.Join(placeholders, ", ") + ") LIMIT " + strconv.Itoa(len(keys))
+	rows, err := s.db.QueryContext(ctx, query, values...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	URLs := make(map[string]string, len(keys))
+
+	for rows.Next() {
+		var key, URL string
+
+		err := rows.Scan(&key, &URL)
+
+		if err != nil {
+			return nil, err
+		}
+
+		URLs[key] = URL
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return URLs, nil
 }
 
 func (s *SQLStorage) GetLastKey() (string, error) {

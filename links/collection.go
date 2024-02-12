@@ -48,7 +48,7 @@ func (c *Collection) GenerateKeys(URLs []string) (map[string]string, error) {
 		return nil, err
 	}
 
-	keysByURLs := map[string]string{}
+	keysByURLs := make(map[string]string, len(generatedKeysSorted))
 
 	for _, keyURL := range generatedKeysSorted {
 		key, URL := keyURL[0], keyURL[1]
@@ -60,4 +60,8 @@ func (c *Collection) GenerateKeys(URLs []string) (map[string]string, error) {
 
 func (c *Collection) GetURL(key string) (string, error) {
 	return c.storage.GetURL(key)
+}
+
+func (c *Collection) GetURLs(keys []string) (map[string]string, error) {
+	return c.storage.GetURLs(keys)
 }

@@ -71,7 +71,7 @@ func (v *Validator) validateURL(URL string) error {
 }
 
 func (v *Validator) validateURLs(URLs []string) error {
-	uniqueURLs := map[string]bool{}
+	uniqueURLs := make(map[string]bool, len(URLs))
 
 	for _, URL := range URLs {
 		err := v.validateURL(URL)

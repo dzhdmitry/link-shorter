@@ -23,6 +23,13 @@ func (t *testStorage) GetURL(key string) (string, error) {
 	return "http://example.com", nil
 }
 
+func (t *testStorage) GetURLs(keys []string) (map[string]string, error) {
+	return map[string]string{
+		"key1": "http://example.com",
+		"key2": "http://example.com",
+	}, nil
+}
+
 func (t *testStorage) GetLastKey() (string, error) {
 	return "", nil
 }

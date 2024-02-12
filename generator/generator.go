@@ -64,25 +64,18 @@ func (g *Generator) Generate(lastKey string) (string, error) {
 	lastKeySplit := strings.Split(lastKey, "")
 
 	for i := len(lastKeySplit) - 1; i >= 0; i-- {
-		letter := lastKeySplit[i]
-		letterIndex := g.alphabet.indexOfLetter(letter)
+		if lastKeySplit[i] == g.alphabet.lastLetter() {
+			lastKeySplit[i] = g.alphabet.firstLetter()
+		} else {
+			lastKeySplit[i] = g.alphabet.letterOfIndex(g.alphabet.indexOfLetter(lastKeySplit[i]) + 1)
 
-		// if letter is "z" (last)
-		if letter == g.alphabet.lastLetter() {
-			continue
+			return strings.Join(lastKeySplit, ""), nil
 		}
-
-		// letter is not last
-		newLetter := g.alphabet.letterOfIndex(letterIndex + 1)
-		key := strings.Join(lastKeySplit[:i], "") + newLetter + strings.Join(lastKeySplit[i+1:], "")
-
-		return key, nil
 	}
 
-	// all letters are "z" (last)
-	key := strings.Repeat(g.alphabet.firstLetter(), len(lastKeySplit)+1)
+	lastKeySplit = append([]string{"0"}, lastKeySplit...)
 
-	return key, nil
+	return strings.Join(lastKeySplit, ""), nil
 }
 
 // GenerateMany returns slice of slices [["key1", "URL1"], ["key2", "URL2"], ...]

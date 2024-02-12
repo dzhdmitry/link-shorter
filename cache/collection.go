@@ -46,3 +46,19 @@ func (c *CachedCollection) GetURL(key string) (string, error) {
 
 	return URL, nil
 }
+
+func (c *CachedCollection) GetURLs(keys []string) (map[string]string, error) {
+	URLs := make(map[string]string, len(keys))
+
+	for _, key := range keys {
+		URL, err := c.GetURL(key)
+
+		if err != nil {
+			return nil, err
+		}
+
+		URLs[key] = URL
+	}
+
+	return URLs, nil
+}

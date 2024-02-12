@@ -21,7 +21,7 @@ func TestGenerate(t *testing.T) {
 		{"Second border", "zz", "000"},
 		{"Random #1", "ci2u1", "ci2u2"},
 		{"Random #2", "2v15ia120eu9vaf5du8i", "2v15ia120eu9vaf5du8j"},
-		{"Under limit", "yzzzzzzzzzzz", "zzzzzzzzzzzz"},
+		{"Under limit", "zzzzzzzzzzzy", "zzzzzzzzzzzz"},
 	}
 	g := NewGenerator(12)
 
@@ -33,6 +33,34 @@ func TestGenerate(t *testing.T) {
 			assert.Equal(t, tt.expected, key)
 		})
 	}
+}
+
+func TestGenerateMultipleTimes(t *testing.T) {
+	g := NewGenerator(12)
+	key := ""
+	keys := []string{}
+
+	for i := 0; i < 500; i++ {
+		key, _ = g.Generate(key)
+		keys = append(keys, key)
+	}
+
+	require.Equal(t, "0", keys[0])
+	require.Equal(t, "1", keys[1])
+	require.Equal(t, "z", keys[35])
+	require.Equal(t, "00", keys[36])
+	require.Equal(t, "01", keys[37])
+	require.Equal(t, "02", keys[38])
+	require.Equal(t, "0z", keys[71])
+	require.Equal(t, "10", keys[72])
+	require.Equal(t, "11", keys[73])
+	require.Equal(t, "12", keys[74])
+	require.Equal(t, "1z", keys[107])
+	require.Equal(t, "20", keys[108])
+	require.Equal(t, "21", keys[109])
+	require.Equal(t, "22", keys[110])
+	require.Equal(t, "2z", keys[143])
+	require.Equal(t, "30", keys[144])
 }
 
 func TestGenerateLimit(t *testing.T) {

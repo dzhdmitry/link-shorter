@@ -1,64 +1,60 @@
 package cache
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 type LFUCache struct {
 	cachedLinks map[string]string
-	frequencies map[string]int
+	frequencies map[int][]string // key - frequency, value - slice of keys, from old to new
+	length      int
 	capacity    int
 	mu          sync.Mutex
 }
 
 func NewLFUCache(capacity int) *LFUCache {
 	return &LFUCache{
-		cachedLinks: map[string]string{},
-		frequencies: map[string]int{},
+		cachedLinks: make(map[string]string, capacity),
+		frequencies: map[int][]string{},
+		length:      0,
 		capacity:    capacity,
+	}
+}
+
+func (c *LFUCache) incrementFrequency(key string) {
+	for frequency, keys := range c.frequencies {
+		index := slices.Index(keys, key)
+
+		if index == -1 {
+			continue
+		}
+
+		c.frequencies[frequency] = slices.Delete(c.frequencies[frequency], index, index+1)
+		c.frequencies[frequency+1] = append(c.frequencies[frequency+1], key)
+
+		if len(c.frequencies[frequency]) == 0 {
+			delete(c.frequencies, frequency)
+		}
+
+		break
 	}
 }
 
 func (c *LFUCache) Get(key string) (string, bool) {
 	URL, ok := c.cachedLinks[key]
 
-	if ok {
-		c.mu.Lock()
-
-		defer c.mu.Unlock()
-
-		c.frequencies[key] += 1
-
-		return URL, ok
+	if !ok {
+		return "", false
 	}
 
-	return "", false
-}
+	c.mu.Lock()
 
-func (c *LFUCache) displace() {
-	leastFrequentlyUsed := ""
-	minFrequency := 1
+	defer c.mu.Unlock()
 
-	for k, f := range c.frequencies {
-		if leastFrequentlyUsed == "" {
-			// first element
-			leastFrequentlyUsed = k
-			minFrequency = f
+	c.incrementFrequency(key)
 
-			continue
-		}
-
-		if f < minFrequency {
-			// replace
-			leastFrequentlyUsed = k
-			minFrequency = f
-		}
-	}
-
-	if leastFrequentlyUsed == "" {
-		panic("not found leastFrequentlyUsed in cache")
-	}
-
-	delete(c.cachedLinks, leastFrequentlyUsed)
-	delete(c.frequencies, leastFrequentlyUsed)
+	return URL, ok
 }
 
 func (c *LFUCache) Remember(key, URL string) {
@@ -68,15 +64,26 @@ func (c *LFUCache) Remember(key, URL string) {
 
 	if _, ok := c.cachedLinks[key]; ok == true {
 		// what if prev has already set key?
-		c.frequencies[key] += 1
+		c.incrementFrequency(key)
 
 		return
 	}
 
-	if len(c.cachedLinks) >= c.capacity {
-		c.displace()
+	if c.length >= c.capacity {
+		for frequency, keys := range c.frequencies {
+			if len(keys) == 0 {
+				continue
+			}
+
+			delete(c.cachedLinks, keys[0])
+			c.frequencies[frequency] = slices.Delete(c.frequencies[frequency], 0, 1)
+
+			break
+		}
+	} else {
+		c.length++
 	}
 
+	c.frequencies[1] = append(c.frequencies[1], key)
 	c.cachedLinks[key] = URL
-	c.frequencies[key] = 1
 }

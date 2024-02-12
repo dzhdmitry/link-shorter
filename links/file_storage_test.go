@@ -78,6 +78,33 @@ func TestGetURL(t *testing.T) {
 	}
 }
 
+func TestGetURLs(t *testing.T) {
+	tests := []struct {
+		name         string
+		keys         []string
+		expectedURLs map[string]string
+	}{
+		{"Empty", []string{"", ""}, map[string]string{}},
+		{"Non-existing", []string{"aawd1"}, map[string]string{}},
+		{"Existing", []string{"test-key2", "test-key3"}, map[string]string{
+			"test-key2": "https://example2.com",
+			"test-key3": "https://example3.com",
+		}},
+	}
+
+	s, _ := NewFileStorage("./../testdata/test_restore.csv")
+	_ = s.Restore()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			url, err := s.GetURLs(tt.keys)
+
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedURLs, url)
+		})
+	}
+}
+
 func TestGetLastKey(t *testing.T) {
 	s, _ := NewFileStorage("./../testdata/test_restore.csv")
 	_ = s.Restore()

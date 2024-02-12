@@ -120,7 +120,7 @@ func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	keys, err := app.Links.GenerateKeys(data)
+	URLsKeys, err := app.Links.GenerateKeys(data)
 
 	if err != nil {
 		if errors.Is(err, generator.ErrLimitReached) {
@@ -132,9 +132,9 @@ func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	links := map[string]string{}
+	links := make(map[string]string, len(URLsKeys))
 
-	for URL, key := range keys {
+	for URL, key := range URLsKeys {
 		links[URL] = app.composeShortLink(key)
 	}
 
@@ -173,22 +173,12 @@ func (app *Application) batchGoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fullLinks := make(map[string]interface{}, len(data))
+	fullLinks, err := app.Links.GetURLs(data)
 
-	for _, key := range data {
-		fullLinks[key], err = app.Links.GetURL(key)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
 
-		if err != nil {
-			app.serverErrorResponse(w, r, err)
-
-			return
-		}
-
-		if fullLinks[key] == "" {
-			app.errorResponse(w, r, http.StatusNotFound, "Full link not found for key "+key)
-
-			return
-		}
+		return
 	}
 
 	response, err := app.compactGZIP(app.writeJSON)(w, r, envelope{"links": fullLinks})

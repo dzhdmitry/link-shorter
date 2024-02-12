@@ -10,15 +10,19 @@ type testCollection struct {
 }
 
 func (c *testCollection) GenerateKey(URL string) (string, error) {
-	panic("implement me")
+	return "key", nil
 }
 
 func (c *testCollection) GenerateKeys(URLs []string) (map[string]string, error) {
-	panic("implement me")
+	return map[string]string{}, nil
 }
 
 func (c *testCollection) GetURL(key string) (string, error) {
 	return "url", nil
+}
+
+func (c *testCollection) GetURLs(keys []string) (map[string]string, error) {
+	return map[string]string{}, nil
 }
 
 type testCache struct {

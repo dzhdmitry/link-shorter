@@ -108,6 +108,18 @@ func (fs *FileStorage) GetURL(key string) (string, error) {
 	return fs.links[key], nil
 }
 
+func (fs *FileStorage) GetURLs(keys []string) (map[string]string, error) {
+	URLs := make(map[string]string, len(keys))
+
+	for _, k := range keys {
+		if URL, ok := fs.links[k]; ok {
+			URLs[k] = URL
+		}
+	}
+
+	return URLs, nil
+}
+
 func (fs *FileStorage) GetLastKey() (string, error) {
 	return fs.lastKey, nil
 }
@@ -155,6 +167,10 @@ func (fsa *FileStorageAsync) Restore() error {
 
 func (fsa *FileStorageAsync) GetURL(key string) (string, error) {
 	return fsa.fs.GetURL(key)
+}
+
+func (fsa *FileStorageAsync) GetURLs(keys []string) (map[string]string, error) {
+	return fsa.fs.GetURLs(keys)
 }
 
 func (fsa *FileStorageAsync) GetLastKey() (string, error) {

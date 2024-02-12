@@ -96,6 +96,36 @@ func (s *SQLStorageSuite) TestGetURL() {
 	}
 }
 
+func (s *SQLStorageSuite) TestGetURLs() {
+	tests := []struct {
+		name         string
+		keys         []string
+		expectedURLs map[string]string
+	}{
+		{"Empty", []string{"", ""}, map[string]string{}},
+		{"Non-existing", []string{"aawd1"}, map[string]string{}},
+		{"Existing", []string{"1q2w", "4hfc8"}, map[string]string{
+			"1q2w":  "https://example.com",
+			"4hfc8": "https://example2.com",
+		}},
+	}
+
+	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('1q2w', 'https://example.com')")
+	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('4hfc8', 'https://example2.com')")
+	storage, err := NewSQLStorage(s.db, 1)
+
+	s.NoError(err)
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			url, err := storage.GetURLs(tt.keys)
+
+			s.NoError(err)
+			s.Equal(tt.expectedURLs, url)
+		})
+	}
+}
+
 func TestSQLStorage(t *testing.T) {
 	suite.Run(t, new(SQLStorageSuite))
 }

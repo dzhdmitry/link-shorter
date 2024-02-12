@@ -63,6 +63,19 @@ func (t *testLinksCollection) GetURL(key string) (string, error) {
 	return t.links[keyInt], nil
 }
 
+func (t *testLinksCollection) GetURLs(keys []string) (map[string]string, error) {
+	URLs := make(map[string]string, len(keys))
+
+	for _, k := range keys {
+		keyInt, _ := strconv.Atoi(k)
+		if URL, ok := t.links[keyInt]; ok {
+			URLs[k] = URL
+		}
+	}
+
+	return URLs, nil
+}
+
 func TestIndexHandlerOK(t *testing.T) {
 	app := Application{
 		Logger: &Logger{out: io.Discard},
@@ -334,7 +347,6 @@ func TestBatchGoHandlerBadRequest(t *testing.T) {
 	}{
 		{"Unknown field", envelope{"unknown": "example"}, http.StatusBadRequest, `body contains incorrect JSON type (at character 1)`},
 		{"Invalid key", []string{"й"}, http.StatusUnprocessableEntity, `invalid letter`},
-		{"Not found", []string{"9"}, http.StatusNotFound, `Full link not found for key 9`},
 	}
 
 	for _, tt := range tests {

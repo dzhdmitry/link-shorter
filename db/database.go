@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/lib/pq"
 	"os"
@@ -62,9 +61,6 @@ func PrepareTestDB() string {
 	db, err := Open(defaultDsn, 25, 25, "15m")
 
 	if err != nil {
-		fmt.Println("failed:")
-		fmt.Println(defaultDsn)
-
 		panic(err)
 	}
 
