@@ -3,10 +3,12 @@ package application
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -24,11 +26,48 @@ type Config struct {
 	DatabaseTimeout      int    `env:"DATABASE_TIMEOUT"`
 }
 
+func NewConfig() Config {
+	return Config{
+		ProjectHost:          "",
+		ProjectPort:          80,
+		ProjectKeyMaxLength:  12,
+		ProjectStorageType:   "file",
+		FileAsync:            false,
+		DatabaseDSN:          "postgres://go:pa55word@postgres:5432/short_links?sslmode=disable",
+		DatabaseMaxOpenConns: 25,
+		DatabaseMaxIdleConns: 25,
+		DatabaseMaxIdleTime:  "15m",
+		DatabaseTimeout:      1,
+	}
+}
+
+func (c Config) Print(l *Logger) {
+	lines := []string{
+		"Using config:",
+		"   Project:",
+		fmt.Sprintf("      Host:                 %s", c.ProjectHost),
+		fmt.Sprintf("      Port:                 %d", c.ProjectPort),
+		fmt.Sprintf("      Key MaxLength:        %d", c.ProjectKeyMaxLength),
+		fmt.Sprintf("      Storage Type:         %s", c.ProjectStorageType),
+		"   File storage:",
+		fmt.Sprintf("      Is acync:             %t", c.FileAsync),
+		"   Database:",
+		fmt.Sprintf("      DSN:                  %s", c.DatabaseDSN),
+		fmt.Sprintf("      Max open connections: %d", c.DatabaseMaxOpenConns),
+		fmt.Sprintf("      Max idle connections: %d", c.DatabaseMaxIdleConns),
+		fmt.Sprintf("      Max idle time:        %s", c.DatabaseMaxIdleTime),
+		fmt.Sprintf("      Timeout (seconds):    %d", c.DatabaseTimeout),
+	}
+
+	l.LogInfo(strings.Join(lines, "\n"))
+}
+
 type Application struct {
-	Config    Config
-	Logger    Logger
-	Validator Validator
-	Links     LinksCollectionInterface
+	Config     Config
+	Logger     Logger
+	Validator  Validator
+	Links      LinksCollectionInterface
+	Background *Background
 }
 
 type LinksCollectionInterface interface {
@@ -61,11 +100,9 @@ func (app *Application) Serve() error {
 
 		defer cancel()
 
-		app.Logger.LogInfo("completing work...")
-
-		// todo complete work...
-
-		app.Logger.LogInfo("work completed")
+		app.Logger.LogInfo("wait for background tasks...")
+		app.Background.Wait()
+		app.Logger.LogInfo("background tasks completed")
 
 		shutdownError <- server.Shutdown(ctx)
 	}()

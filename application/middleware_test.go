@@ -2,6 +2,7 @@ package application
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
 	"io/ioutil"
@@ -17,6 +18,10 @@ func testExtract(w http.ResponseWriter, r *http.Request, destination interface{}
 
 func testCompact(w http.ResponseWriter, r *http.Request, data interface{}) ([]byte, error) {
 	return []byte("compact"), nil
+}
+
+func testLog(w http.ResponseWriter, r *http.Request) {
+	//
 }
 
 func TestExtractGZIP(t *testing.T) {
@@ -53,4 +58,15 @@ func TestCompactGZIP(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, file, result)
 	require.Equal(t, w.Header().Get("Content-Encoding"), "gzip")
+}
+
+func TestLogRequest(t *testing.T) {
+	w := &testWriter{}
+	logger := NewLogger(w, &testClock{})
+	app := Application{Logger: *logger}
+	r := httptest.NewRequest(http.MethodGet, "/some_url", nil)
+	r.RemoteAddr = "127.0.0.1:1234"
+
+	app.logRequest(testLog)(httptest.NewRecorder(), r)
+	assert.Equal(t, "INFO: [2024-02-07T12:00:00Z] 127.0.0.1:1234 - HTTP/1.1 GET /some_url \n", w.messages[0])
 }

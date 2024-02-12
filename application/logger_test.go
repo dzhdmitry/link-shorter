@@ -40,6 +40,5 @@ func TestLogError(t *testing.T) {
 	l := NewLogger(&w, &testClock{})
 
 	l.LogError(errors.New("test error"))
-
 	assert.Equal(t, "ERROR: [2024-02-07T12:00:00Z] test error \n", w.messages[0])
 }

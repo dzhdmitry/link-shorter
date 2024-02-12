@@ -113,12 +113,13 @@ func (fs *FileStorage) GetLastKey() (string, error) {
 }
 
 type FileStorageAsync struct {
-	logger application.Logger
-	fs     *FileStorage
-	mu     sync.Mutex
+	logger     application.Logger
+	background *application.Background
+	fs         *FileStorage
+	mu         sync.Mutex
 }
 
-func NewFileStorageAsync(logger application.Logger, filename string) (*FileStorageAsync, error) {
+func NewFileStorageAsync(logger application.Logger, background *application.Background, filename string) (*FileStorageAsync, error) {
 	fs, err := NewFileStorage(filename)
 
 	if err != nil {
@@ -126,13 +127,14 @@ func NewFileStorageAsync(logger application.Logger, filename string) (*FileStora
 	}
 
 	return &FileStorageAsync{
-		logger: logger,
-		fs:     fs,
+		logger:     logger,
+		background: background,
+		fs:         fs,
 	}, nil
 }
 
 func (fsa *FileStorageAsync) StoreKeysURLs(keysURLs [][]string) error {
-	go func() {
+	fsa.background.Run(func() {
 		fsa.mu.Lock()
 
 		defer fsa.mu.Unlock()
@@ -140,7 +142,7 @@ func (fsa *FileStorageAsync) StoreKeysURLs(keysURLs [][]string) error {
 		if err := fsa.fs.persist(keysURLs); err != nil {
 			fsa.logger.LogError(err)
 		}
-	}()
+	})
 
 	fsa.fs.remember(keysURLs)
 

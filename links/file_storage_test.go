@@ -2,6 +2,7 @@ package links
 
 import (
 	"github.com/stretchr/testify/require"
+	"link-shorter.dzhdmitry.net/application"
 	"os"
 	"testing"
 )
@@ -85,4 +86,23 @@ func TestGetLastKey(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, "test-key3", url)
+}
+
+func TestAsyncStoreKeysURLs(t *testing.T) {
+	_ = os.Remove("./../testdata/results/test_store.csv")
+	background := &application.Background{}
+	s, err := NewFileStorageAsync(application.Logger{}, background, "./../testdata/results/test_store.csv")
+
+	require.NoError(t, err)
+
+	err = s.StoreKeysURLs([][]string{{"test-key", "https://example.com"}})
+
+	require.NoError(t, err)
+
+	background.Wait()
+
+	data, err := os.ReadFile("./../testdata/results/test_store.csv")
+
+	require.Equal(t, "test-key,https://example.com\n", string(data))
+
 }

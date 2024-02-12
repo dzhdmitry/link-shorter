@@ -13,8 +13,9 @@ import (
 )
 
 func main() {
-	config := application.Config{}
+	config := application.NewConfig()
 	logger := application.NewLogger(os.Stdout, &application.Clock{})
+	background := &application.Background{}
 
 	if err := env.Parse(&config); err != nil {
 		logger.LogError(err)
@@ -33,12 +34,14 @@ func main() {
 	flag.IntVar(&config.DatabaseTimeout, "db-timeout", config.DatabaseTimeout, "PostgreSQL queries execution timeout")
 	flag.Parse()
 
+	config.Print(logger)
+
 	var storage links.StorageInterface
 	var err error
 
 	if config.ProjectStorageType == "file" {
 		if config.FileAsync {
-			storage, err = links.NewFileStorageAsync(*logger, "tmp/storage.csv")
+			storage, err = links.NewFileStorageAsync(*logger, background, "tmp/storage.csv")
 		} else {
 			storage, err = links.NewFileStorage("tmp/storage.csv")
 		}
@@ -69,7 +72,8 @@ func main() {
 		Validator: application.Validator{
 			KeyMaxLength: config.ProjectKeyMaxLength,
 		},
-		Links: links.NewCollection(*generator.NewGenerator(config.ProjectKeyMaxLength), storage),
+		Links:      links.NewCollection(*generator.NewGenerator(config.ProjectKeyMaxLength), storage),
+		Background: background,
 	}
 
 	logger.LogInfo("Start server on " + config.ProjectHost + ":" + strconv.Itoa(config.ProjectPort))

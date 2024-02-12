@@ -14,5 +14,5 @@ func (app *Application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/batch/generate", app.logRequest(app.batchGenerateHandler))
 	router.HandlerFunc(http.MethodPost, "/batch/go", app.logRequest(app.batchGoHandler))
 
-	return router
+	return app.recoverPanic(router)
 }
