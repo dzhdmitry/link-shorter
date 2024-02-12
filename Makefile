@@ -21,7 +21,7 @@ migration:
 	docker-compose exec go migrate create -seq -ext=.sql -dir=./migrations ${name}
 
 migrate:
-	docker-compose exec go migrate -path=./migrations -database=${DATABASE_DSN} up
+	docker-compose exec go migrate -path=./migrations -database=${DB_DSN} up
 
 test:
 	docker-compose exec go go test ./...

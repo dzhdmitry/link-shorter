@@ -113,13 +113,13 @@ func (fs *FileStorage) GetLastKey() (string, error) {
 }
 
 type FileStorageAsync struct {
-	logger     application.Logger
+	logger     *application.Logger
 	background *application.Background
 	fs         *FileStorage
 	mu         sync.Mutex
 }
 
-func NewFileStorageAsync(logger application.Logger, background *application.Background, filename string) (*FileStorageAsync, error) {
+func NewFileStorageAsync(logger *application.Logger, background *application.Background, filename string) (*FileStorageAsync, error) {
 	fs, err := NewFileStorage(filename)
 
 	if err != nil {

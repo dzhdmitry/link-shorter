@@ -65,7 +65,7 @@ func (t *testLinksCollection) GetURL(key string) (string, error) {
 
 func TestIndexHandlerOK(t *testing.T) {
 	app := Application{
-		Logger: Logger{out: io.Discard},
+		Logger: &Logger{out: io.Discard},
 		Links:  newTestLinkStorage(1, map[int]string{}),
 	}
 	w := httptest.NewRecorder()
@@ -87,7 +87,7 @@ func TestIndexHandlerOK(t *testing.T) {
 
 func TestGenerateHandlerOK(t *testing.T) {
 	app := Application{
-		Logger: Logger{out: io.Discard},
+		Logger: &Logger{out: io.Discard},
 		Links:  newTestLinkStorage(1, map[int]string{}),
 	}
 	w := httptest.NewRecorder()
@@ -111,7 +111,7 @@ func TestGenerateHandlerOK(t *testing.T) {
 
 func TestGenerateHandlerBadRequest(t *testing.T) {
 	app := Application{
-		Logger: Logger{out: io.Discard},
+		Logger: &Logger{out: io.Discard},
 		Links:  newTestLinkStorage(0, map[int]string{}),
 	}
 
@@ -158,7 +158,7 @@ func TestGenerateHandlerBadRequest(t *testing.T) {
 
 func TestGoHandlerOK(t *testing.T) {
 	app := Application{
-		Logger:    Logger{out: io.Discard},
+		Logger:    &Logger{out: io.Discard},
 		Validator: Validator{KeyMaxLength: 5},
 		Links: newTestLinkStorage(1, map[int]string{
 			1: "https://example.com",
@@ -188,7 +188,7 @@ func TestGoHandlerOK(t *testing.T) {
 func TestGoHandlerBadRequest(t *testing.T) {
 	app := Application{
 		Config: Config{ProjectKeyMaxLength: 5},
-		Logger: Logger{out: io.Discard},
+		Logger: &Logger{out: io.Discard},
 		Links:  newTestLinkStorage(1, map[int]string{}),
 	}
 
@@ -227,7 +227,7 @@ func TestGoHandlerBadRequest(t *testing.T) {
 
 func TestBatchGenerateHandlerOK(t *testing.T) {
 	app := Application{
-		Logger: Logger{out: io.Discard},
+		Logger: &Logger{out: io.Discard},
 		Links:  newTestLinkStorage(2, map[int]string{}),
 	}
 	w := httptest.NewRecorder()
@@ -251,7 +251,7 @@ func TestBatchGenerateHandlerOK(t *testing.T) {
 
 func TestBatchGenerateHandlerBadRequest(t *testing.T) {
 	app := Application{
-		Logger: Logger{out: io.Discard},
+		Logger: &Logger{out: io.Discard},
 		Links:  newTestLinkStorage(2, map[int]string{}),
 	}
 
@@ -291,7 +291,7 @@ func TestBatchGenerateHandlerBadRequest(t *testing.T) {
 
 func TestBatchGoHandlerOK(t *testing.T) {
 	app := Application{
-		Logger:    Logger{out: io.Discard},
+		Logger:    &Logger{out: io.Discard},
 		Validator: Validator{KeyMaxLength: 5},
 		Links: newTestLinkStorage(2, map[int]string{
 			1: "https://example.com",
@@ -319,7 +319,7 @@ func TestBatchGoHandlerOK(t *testing.T) {
 
 func TestBatchGoHandlerBadRequest(t *testing.T) {
 	app := Application{
-		Logger:    Logger{out: io.Discard},
+		Logger:    &Logger{out: io.Discard},
 		Validator: Validator{KeyMaxLength: 5},
 		Links: newTestLinkStorage(2, map[int]string{
 			1: "http://example.com",
@@ -348,7 +348,7 @@ func TestBatchGoHandlerBadRequest(t *testing.T) {
 			result := w.Result()
 
 			require.Equal(t, "application/json", result.Header.Get("Content-Type"))
-			//require.Equal(t, tt.expectedCode, result.StatusCode)
+			require.Equal(t, tt.expectedCode, result.StatusCode)
 
 			jsonResponse, err := io.ReadAll(result.Body)
 

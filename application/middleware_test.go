@@ -63,7 +63,7 @@ func TestCompactGZIP(t *testing.T) {
 func TestLogRequest(t *testing.T) {
 	w := &testWriter{}
 	logger := NewLogger(w, &testClock{})
-	app := Application{Logger: *logger}
+	app := Application{Logger: logger}
 	r := httptest.NewRequest(http.MethodGet, "/some_url", nil)
 	r.RemoteAddr = "127.0.0.1:1234"
 

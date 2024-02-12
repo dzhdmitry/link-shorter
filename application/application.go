@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,34 +15,54 @@ import (
 )
 
 type Config struct {
-	ProjectHost          string `env:"PROJECT_HOST"`
-	ProjectPort          int    `env:"PROJECT_PORT"`
-	ProjectKeyMaxLength  int    `env:"PROJECT_KEY_MAX_LENGTH"`
-	ProjectStorageType   string `env:"PROJECT_STORAGE_TYPE"`
-	FileAsync            bool   `env:"FILE_ASYNC"`
-	DatabaseDSN          string `env:"DATABASE_DSN"`
-	DatabaseMaxOpenConns int    `env:"DATABASE_MAX_OPEN_CONNS"`
-	DatabaseMaxIdleConns int    `env:"DATABASE_MAX_IDLE_CONNS"`
-	DatabaseMaxIdleTime  string `env:"DATABASE_MAX_OPEN_TIME"`
-	DatabaseTimeout      int    `env:"DATABASE_TIMEOUT"`
+	ProjectHost         string `env:"PROJECT_HOST"`
+	ProjectPort         int    `env:"PROJECT_PORT"`
+	ProjectKeyMaxLength int    `env:"PROJECT_KEY_MAX_LENGTH"`
+	ProjectStorageType  string `env:"PROJECT_STORAGE_TYPE"`
+	FileAsync           bool   `env:"FILE_ASYNC"`
+	DbDSN               string `env:"DB_DSN"`
+	DbMaxOpenConns      int    `env:"DB_MAX_OPEN_CONNS"`
+	DbMaxIdleConns      int    `env:"DB_MAX_IDLE_CONNS"`
+	DbMaxIdleTime       string `env:"DB_MAX_OPEN_TIME"`
+	DbTimeout           int    `env:"DATABASE_TIMEOUT"`
+	CacheEnabled        bool   `env:"CACHE_ENABLED"`
+	CacheCapacity       int    `env:"CACHE_CAPACITY"`
 }
 
 func NewConfig() Config {
 	return Config{
-		ProjectHost:          "",
-		ProjectPort:          80,
-		ProjectKeyMaxLength:  12,
-		ProjectStorageType:   "file",
-		FileAsync:            false,
-		DatabaseDSN:          "postgres://go:pa55word@postgres:5432/short_links?sslmode=disable",
-		DatabaseMaxOpenConns: 25,
-		DatabaseMaxIdleConns: 25,
-		DatabaseMaxIdleTime:  "15m",
-		DatabaseTimeout:      1,
+		ProjectHost:         "",
+		ProjectPort:         80,
+		ProjectKeyMaxLength: 12,
+		ProjectStorageType:  "file",
+		FileAsync:           false,
+		DbDSN:               "postgres://go:pa55word@postgres:5432/short_links?sslmode=disable",
+		DbMaxOpenConns:      25,
+		DbMaxIdleConns:      25,
+		DbMaxIdleTime:       "15m",
+		DbTimeout:           1,
+		CacheEnabled:        false,
+		CacheCapacity:       0,
 	}
 }
 
-func (c Config) Print(l *Logger) {
+func (c *Config) Parse() {
+	flag.StringVar(&c.ProjectHost, "host", c.ProjectHost, "Project server host")
+	flag.IntVar(&c.ProjectPort, "port", c.ProjectPort, "Project server port")
+	flag.IntVar(&c.ProjectKeyMaxLength, "key-max", c.ProjectKeyMaxLength, "Max length of the key")
+	flag.StringVar(&c.ProjectStorageType, "storage", c.ProjectStorageType, "Storage type (file|postgres)")
+	flag.BoolVar(&c.FileAsync, "file-async", c.FileAsync, "File storage is asynchronous|synchronous (true|false)")
+	flag.StringVar(&c.DbDSN, "db-dsn", c.DbDSN, "PostgreSQL DSN")
+	flag.IntVar(&c.DbMaxOpenConns, "db-max-open-conns", c.DbMaxOpenConns, "PostgreSQL max open connections")
+	flag.IntVar(&c.DbMaxIdleConns, "db-max-idle-conns", c.DbMaxIdleConns, "PostgreSQL max idle connections")
+	flag.StringVar(&c.DbMaxIdleTime, "db-max-idle-time", c.DbMaxIdleTime, "PostgreSQL max connection idle time")
+	flag.IntVar(&c.DbTimeout, "db-timeout", c.DbTimeout, "PostgreSQL queries execution timeout")
+	flag.BoolVar(&c.CacheEnabled, "cache", c.CacheEnabled, "Caching of short links enabled")
+	flag.IntVar(&c.CacheCapacity, "cache-cap", c.CacheCapacity, "Capacity of cache")
+	flag.Parse()
+}
+
+func (c *Config) Print(l *Logger) {
 	lines := []string{
 		"Using config:",
 		"   Project:",
@@ -52,11 +73,14 @@ func (c Config) Print(l *Logger) {
 		"   File storage:",
 		fmt.Sprintf("      Is acync:             %t", c.FileAsync),
 		"   Database:",
-		fmt.Sprintf("      DSN:                  %s", c.DatabaseDSN),
-		fmt.Sprintf("      Max open connections: %d", c.DatabaseMaxOpenConns),
-		fmt.Sprintf("      Max idle connections: %d", c.DatabaseMaxIdleConns),
-		fmt.Sprintf("      Max idle time:        %s", c.DatabaseMaxIdleTime),
-		fmt.Sprintf("      Timeout (seconds):    %d", c.DatabaseTimeout),
+		fmt.Sprintf("      DSN:                  %s", c.DbDSN),
+		fmt.Sprintf("      Max open connections: %d", c.DbMaxOpenConns),
+		fmt.Sprintf("      Max idle connections: %d", c.DbMaxIdleConns),
+		fmt.Sprintf("      Max idle time:        %s", c.DbMaxIdleTime),
+		fmt.Sprintf("      Timeout (seconds):    %d", c.DbTimeout),
+		"   Cache:",
+		fmt.Sprintf("      Caching enabled:      %t", c.CacheEnabled),
+		fmt.Sprintf("      Capacity of cache:    %d", c.CacheCapacity),
 	}
 
 	l.LogInfo(strings.Join(lines, "\n"))
@@ -64,7 +88,7 @@ func (c Config) Print(l *Logger) {
 
 type Application struct {
 	Config     Config
-	Logger     Logger
+	Logger     *Logger
 	Validator  Validator
 	Links      LinksCollectionInterface
 	Background *Background

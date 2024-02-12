@@ -168,7 +168,7 @@ func (app *Application) batchGoHandler(w http.ResponseWriter, r *http.Request) {
 	err = app.Validator.validateKeys(data)
 
 	if err != nil {
-		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		app.errorResponse(w, r, http.StatusUnprocessableEntity, err.Error())
 
 		return
 	}

@@ -91,7 +91,7 @@ func TestGetLastKey(t *testing.T) {
 func TestAsyncStoreKeysURLs(t *testing.T) {
 	_ = os.Remove("./../testdata/results/test_store.csv")
 	background := &application.Background{}
-	s, err := NewFileStorageAsync(application.Logger{}, background, "./../testdata/results/test_store.csv")
+	s, err := NewFileStorageAsync(&application.Logger{}, background, "./../testdata/results/test_store.csv")
 
 	require.NoError(t, err)
 
