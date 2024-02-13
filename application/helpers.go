@@ -90,3 +90,9 @@ func (app *Application) serverErrorResponse(w http.ResponseWriter, r *http.Reque
 	app.Logger.LogError(err)
 	app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 }
+
+func (app *Application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
+	message := "rate limit exceeded"
+
+	app.errorResponse(w, r, http.StatusTooManyRequests, message)
+}

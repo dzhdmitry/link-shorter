@@ -27,6 +27,9 @@ type Config struct {
 	DbTimeout           int    `env:"DATABASE_TIMEOUT"`
 	CacheEnabled        bool   `env:"CACHE_ENABLED"`
 	CacheCapacity       int    `env:"CACHE_CAPACITY"`
+	LimiterEnabled      bool   `env:"LIMITER_ENABLED"`
+	LimiterRPS          int    `env:"LIMITER_RPS"`
+	LimiterBurst        int    `env:"LIMITER_BURST"`
 }
 
 func NewConfig() Config {
@@ -43,6 +46,9 @@ func NewConfig() Config {
 		DbTimeout:           1,
 		CacheEnabled:        false,
 		CacheCapacity:       0,
+		LimiterEnabled:      true,
+		LimiterRPS:          2,
+		LimiterBurst:        4,
 	}
 }
 
@@ -59,6 +65,9 @@ func (c *Config) Parse() {
 	flag.IntVar(&c.DbTimeout, "db-timeout", c.DbTimeout, "PostgreSQL queries execution timeout")
 	flag.BoolVar(&c.CacheEnabled, "cache", c.CacheEnabled, "Caching of short links enabled")
 	flag.IntVar(&c.CacheCapacity, "cache-cap", c.CacheCapacity, "Capacity of cache")
+	flag.BoolVar(&c.LimiterEnabled, "limiter", c.LimiterEnabled, "Rate limiter is enabled")
+	flag.IntVar(&c.LimiterRPS, "limiter-rps", c.LimiterRPS, "Rate limiter maximum RPS per IP")
+	flag.IntVar(&c.LimiterBurst, "limiter-burst", c.LimiterBurst, "Rate limiter maximum burst")
 	flag.Parse()
 }
 
@@ -81,6 +90,10 @@ func (c *Config) Print(l *Logger) {
 		"   Cache:",
 		fmt.Sprintf("      Caching enabled:      %t", c.CacheEnabled),
 		fmt.Sprintf("      Capacity of cache:    %d", c.CacheCapacity),
+		"   Rate limiter:",
+		fmt.Sprintf("      Rate limiter enabled: %t", c.LimiterEnabled),
+		fmt.Sprintf("      RPS per IP:           %d", c.LimiterRPS),
+		fmt.Sprintf("      Maximum burst:        %d", c.LimiterBurst),
 	}
 
 	l.LogInfo(strings.Join(lines, "\n"))
