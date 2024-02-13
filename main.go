@@ -19,7 +19,7 @@ func main() {
 	}
 
 	config.Parse()
-	config.Print(logger)
+	logger.LogInfo(config.Info())
 
 	Container := container.Container{
 		Logger:     logger,

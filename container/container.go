@@ -22,9 +22,9 @@ type Container struct {
 func (c Container) createFileStorage(async bool) (links.StorageInterface, error) {
 	if async {
 		return links.NewFileStorageAsync(c.Logger, c.Background, storageFilename)
-	} else {
-		return links.NewFileStorage(storageFilename)
 	}
+
+	return links.NewFileStorage(storageFilename)
 }
 
 func (c Container) createStorage(config application.Config) (links.StorageInterface, *sql.DB, error) {

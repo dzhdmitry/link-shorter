@@ -2,6 +2,7 @@ package generator
 
 import (
 	"errors"
+	"slices"
 	"strings"
 )
 
@@ -20,22 +21,8 @@ func (a *alphabet) lastLetter() string {
 	return a.letters[len(a.letters)-1]
 }
 
-func (a *alphabet) indexOfLetter(letter string) int {
-	for k, v := range a.letters {
-		if letter == v {
-			return k
-		}
-	}
-
-	return -1
-}
-
-func (a *alphabet) letterOfIndex(index int) string {
-	if index >= len(a.letters) {
-		return ""
-	}
-
-	return a.letters[index]
+func (a *alphabet) nextLetter(letter string) string {
+	return a.letters[slices.Index(a.letters, letter)+1]
 }
 
 type Generator struct {
@@ -67,7 +54,7 @@ func (g *Generator) Generate(lastKey string) (string, error) {
 		if lastKeySplit[i] == g.alphabet.lastLetter() {
 			lastKeySplit[i] = g.alphabet.firstLetter()
 		} else {
-			lastKeySplit[i] = g.alphabet.letterOfIndex(g.alphabet.indexOfLetter(lastKeySplit[i]) + 1)
+			lastKeySplit[i] = g.alphabet.nextLetter(lastKeySplit[i])
 
 			return strings.Join(lastKeySplit, ""), nil
 		}

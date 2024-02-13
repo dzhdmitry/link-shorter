@@ -71,7 +71,7 @@ func (c *Config) Parse() {
 	flag.Parse()
 }
 
-func (c *Config) Print(l *Logger) {
+func (c *Config) Info() string {
 	lines := []string{
 		"Using config:",
 		"   Project:",
@@ -96,7 +96,7 @@ func (c *Config) Print(l *Logger) {
 		fmt.Sprintf("      Maximum burst:        %d", c.LimiterBurst),
 	}
 
-	l.LogInfo(strings.Join(lines, "\n"))
+	return strings.Join(lines, "\n")
 }
 
 type Application struct {

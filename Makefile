@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: build up down ps bash migration docker test test-coverage
+.PHONY: build up down ps bash migration migrate test test-coverage
 
 build:
 	docker-compose build

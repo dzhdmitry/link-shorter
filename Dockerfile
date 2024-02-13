@@ -16,6 +16,11 @@ RUN mkdir /.cache && chown -R go:go /.cache
 
 WORKDIR /app
 
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
 USER go
 
 CMD ["air"]
