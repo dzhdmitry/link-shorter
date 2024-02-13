@@ -29,13 +29,13 @@ type testCache struct {
 	data map[string]string
 }
 
-func (c *testCache) Get(key string) (string, bool) {
+func (c *testCache) Get(key string) (interface{}, bool) {
 	v, ok := c.data[key]
 
 	return v, ok
 }
 
-func (c *testCache) Remember(key string, URL string) {
+func (c *testCache) Put(key string, URL string) {
 	c.data[key] = URL
 }
 

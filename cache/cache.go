@@ -1,19 +1,31 @@
 package cache
 
 import (
+	"container/list"
 	"slices"
-	"sort"
 	"sync"
 )
 
 type CachedEntry struct {
-	URL       string
+	value   interface{}
+	freqRef *list.Element
+}
+
+type FrequencyEntry struct {
 	frequency int
+	keys      []string // keys of frequency - from old to new
+}
+
+func NewFrequencyEntry(frequency int) *FrequencyEntry {
+	return &FrequencyEntry{
+		frequency: frequency,
+		keys:      []string{},
+	}
 }
 
 type LFUCache struct {
 	cachedEntries map[string]*CachedEntry
-	frequencies   map[int][]string // key - frequency, value - slice of keys, from old to new
+	frequencies   *list.List // list of *FrequencyEntry
 	length        int
 	capacity      int
 	mu            sync.Mutex
@@ -22,44 +34,36 @@ type LFUCache struct {
 func NewLFUCache(capacity int) *LFUCache {
 	return &LFUCache{
 		cachedEntries: make(map[string]*CachedEntry, capacity),
-		frequencies:   map[int][]string{},
+		frequencies:   list.New(),
 		length:        0,
 		capacity:      capacity,
 	}
 }
 
 func (c *LFUCache) incrementFrequency(key string) {
-	keyFrequency := c.cachedEntries[key].frequency
-	keyPosition := slices.Index(c.frequencies[keyFrequency], key)
+	freqRef := c.cachedEntries[key].freqRef
+	keyPosition := slices.Index(freqRef.Value.(*FrequencyEntry).keys, key)
 
 	if keyPosition == -1 {
 		panic("not found key in cache frequencies")
 	}
 
-	c.frequencies[keyFrequency] = slices.Delete(c.frequencies[keyFrequency], keyPosition, keyPosition+1)
-	c.frequencies[keyFrequency+1] = append(c.frequencies[keyFrequency+1], key)
-	c.cachedEntries[key].frequency++
+	freqRef.Value.(*FrequencyEntry).keys = slices.Delete(freqRef.Value.(*FrequencyEntry).keys, keyPosition, keyPosition+1)
+	next := freqRef.Next()
 
-	if len(c.frequencies[keyFrequency]) == 0 {
-		delete(c.frequencies, keyFrequency)
+	if next == nil {
+		next = c.frequencies.PushBack(NewFrequencyEntry(freqRef.Value.(*FrequencyEntry).frequency + 1))
+	}
+
+	next.Value.(*FrequencyEntry).keys = append(next.Value.(*FrequencyEntry).keys, key)
+	c.cachedEntries[key].freqRef = next
+
+	if len(freqRef.Value.(*FrequencyEntry).keys) == 0 {
+		c.frequencies.Remove(freqRef)
 	}
 }
 
-func (c *LFUCache) getFrequenciesOrdered() []int {
-	frequencies := make([]int, len(c.frequencies))
-	i := 0
-
-	for frequency := range c.frequencies {
-		frequencies[i] = frequency
-		i++
-	}
-
-	sort.Ints(frequencies)
-
-	return frequencies
-}
-
-func (c *LFUCache) Get(key string) (string, bool) {
+func (c *LFUCache) Get(key string) (interface{}, bool) {
 	entry, ok := c.cachedEntries[key]
 
 	if !ok {
@@ -72,10 +76,10 @@ func (c *LFUCache) Get(key string) (string, bool) {
 
 	c.incrementFrequency(key)
 
-	return entry.URL, ok
+	return entry.value, ok
 }
 
-func (c *LFUCache) Remember(key, URL string) {
+func (c *LFUCache) Put(key, value string) {
 	c.mu.Lock()
 
 	defer c.mu.Unlock()
@@ -88,13 +92,13 @@ func (c *LFUCache) Remember(key, URL string) {
 	}
 
 	if c.length >= c.capacity {
-		for _, frequency := range c.getFrequenciesOrdered() {
-			if len(c.frequencies[frequency]) == 0 {
+		for e := c.frequencies.Front(); e != nil; e.Next() {
+			if len(e.Value.(*FrequencyEntry).keys) == 0 {
 				continue
 			}
 
-			delete(c.cachedEntries, c.frequencies[frequency][0])
-			c.frequencies[frequency] = slices.Delete(c.frequencies[frequency], 0, 1)
+			delete(c.cachedEntries, e.Value.(*FrequencyEntry).keys[0])
+			e.Value.(*FrequencyEntry).keys = slices.Delete(e.Value.(*FrequencyEntry).keys, 0, 1)
 
 			break
 		}
@@ -102,6 +106,14 @@ func (c *LFUCache) Remember(key, URL string) {
 		c.length++
 	}
 
-	c.cachedEntries[key] = &CachedEntry{URL: URL, frequency: 1}
-	c.frequencies[1] = append(c.frequencies[1], key)
+	if c.frequencies.Len() == 0 {
+		c.frequencies.PushBack(NewFrequencyEntry(1))
+	} else {
+		if c.frequencies.Front().Value.(*FrequencyEntry).frequency != 1 {
+			c.frequencies.PushFront(NewFrequencyEntry(1))
+		}
+	}
+
+	c.frequencies.Front().Value.(*FrequencyEntry).keys = append(c.frequencies.Front().Value.(*FrequencyEntry).keys, key)
+	c.cachedEntries[key] = &CachedEntry{value: value, freqRef: c.frequencies.Front()}
 }

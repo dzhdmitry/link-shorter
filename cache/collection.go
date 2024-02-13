@@ -1,12 +1,13 @@
 package cache
 
 import (
+	"fmt"
 	"link-shorter.dzhdmitry.net/application"
 )
 
 type MemoryCacheInterface interface {
-	Get(string) (string, bool)
-	Remember(string, string)
+	Get(string) (interface{}, bool)
+	Put(string, string)
 }
 
 type CachedCollection struct {
@@ -33,7 +34,7 @@ func (c *CachedCollection) GetURL(key string) (string, error) {
 	cachedURL, ok := c.cache.Get(key)
 
 	if ok {
-		return cachedURL, nil
+		return fmt.Sprintf("%s", cachedURL), nil
 	}
 
 	URL, err := c.collection.GetURL(key)
@@ -42,7 +43,7 @@ func (c *CachedCollection) GetURL(key string) (string, error) {
 		return "", err
 	}
 
-	c.cache.Remember(key, URL)
+	c.cache.Put(key, URL)
 
 	return URL, nil
 }
