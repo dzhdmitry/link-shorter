@@ -1,4 +1,4 @@
-# Сокращатель ссылок 
+# Сокращатель ссылок
 
 ## Установка и запуск (docker)
 
@@ -32,7 +32,7 @@ make test-coverage
 
 ## Описание
 
-Простой сокращатель ссылок, преобразует ссылку, например https://github.com/dzhdmitry?tab=repositories&language=go, 
+Простой сокращатель ссылок, преобразует ссылку, например https://github.com/dzhdmitry?tab=repositories&language=go,
 в короткую ссылку вида `http://host/d3s`.
 
 Для каждой ссылки генерируется кототкий уникальный токен, состоящий из набора [0-9a-z] и получающийся путём применения биективной функции от порядкового номера ссылки.
@@ -53,9 +53,20 @@ make test-coverage
 
 ### Endpoint-ы:
 
-| Endpoint                               | запрос (пример)                              | ответ                                                   | комментарий                                                   |
-|----------------------------------------|----------------------------------------------|---------------------------------------------------------|---------------------------------------------------------------|
-| `POST http://localhost/generate`       | `{"URL": "http://a.com/path"}`               | `{"link": "http://localhost/go/7pv"}`                   | ссылка должна выть валидным URL                               |
-| `GET  http://localhost/go/:key`        |                                              |                                                         | key, полученный из generate                                   |
-| `POST http://localhost/batch/generate` | `["http://a.com/path", "http://b.com/path"]` | `{"links": ["7pv", "5v6"]}`                             | ссылка должна выть валидным URL; ссылки не должны повторяться |
-| `GET  http://localhost/batch/go`       | `["7pv", "5v6"]`                             | `{"links": ["http://a.com/path", "http://b.com/path"]}` | аналогично `/go/:key`                                         |
+1. `POST http://localhost/generate`
+   * запрос: `{"URL": "http://a.com/path"}`
+   * ответ: `{"link": "http://localhost/go/7pv"}`
+
+2. `POST http://localhost/go/:key`
+   * ответ: `{"link": "http://localhost/go/7pv"}`
+
+3. `POST http://localhost/batch/generate`
+   * запрос: `["http://a.com/path", "http://b.com/path"]`
+   * ответ: `{"links": {"http://a.com/path": "http://localhost/go/7pv", "http://b.com/path": "http://localhost/go/5v6"}}`
+
+4. `POST http://localhost/batch/go`
+   * запрос: `["7pv", "5v6"]`
+   * ответ: `{"links": {"7pv": "http://a.com/path", "5v6":"http://b.com/path"}}`
+
+Все входящие ссылки должны быть валидными URL-ами.
+Ссылки в запросе `/batch/generate` не должны повторяться.
