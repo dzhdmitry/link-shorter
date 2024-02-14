@@ -10,14 +10,6 @@ import (
 	"time"
 )
 
-type StorageInterface interface {
-	StoreKeysURLs([][]string) error
-	Restore() error
-	GetURL(string) (string, error)
-	GetURLs([]string) (map[string]string, error)
-	GetLastKey() (string, error)
-}
-
 type SQLStorage struct {
 	db      *sql.DB
 	timeout time.Duration
@@ -29,15 +21,63 @@ func NewSQLStorage(db *sql.DB, timeout int) (*SQLStorage, error) {
 		db:      db,
 		timeout: time.Second * time.Duration(timeout),
 	}
-	err := s.Restore()
+
+	return &s, nil //todo remove nil
+}
+
+func (s *SQLStorage) StoreURLs(URLs []string) (map[string]string, error) {
+	if len(URLs) == 0 {
+		return map[string]string{}, nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
+
+	defer cancel()
+
+	var placeholders []string
+	var values []interface{}
+	n := 1
+
+	for _, URL := range URLs {
+		placeholders = append(placeholders, fmt.Sprintf("($%d, $%d)", n, n+1))
+		values = append(values, "todo", URL)
+		n += 2
+	}
+
+	query := "INSERT INTO links(key, url) VALUES " + strings.Join(placeholders, ", ") + " RETURNING id"
+	rows, err := s.db.QueryContext(ctx, query, values...)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &s, nil
+	defer rows.Close()
+
+	keysByURLs := make(map[string]string, len(URLs))
+	i := 0
+
+	for rows.Next() {
+		var id int
+
+		err := rows.Scan(&id)
+
+		if err != nil {
+			return nil, err
+		}
+
+		key := numberToKey(id)
+		keysByURLs[URLs[i]] = key
+		i++
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return keysByURLs, nil
 }
 
+// todo delete
 func (s *SQLStorage) StoreKeysURLs(keysURLs [][]string) error {
 	if len(keysURLs) == 0 {
 		return nil
@@ -71,25 +111,6 @@ func (s *SQLStorage) StoreKeysURLs(keysURLs [][]string) error {
 }
 
 func (s *SQLStorage) Restore() error {
-	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
-
-	defer cancel()
-
-	var lastKey string
-	query := "SELECT key FROM links ORDER BY id DESC LIMIT 1"
-	err := s.db.QueryRowContext(ctx, query).Scan(&lastKey)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil
-		}
-
-		return err
-
-	}
-
-	s.lastKey = lastKey
-
 	return nil
 }
 
@@ -99,8 +120,8 @@ func (s *SQLStorage) GetURL(key string) (string, error) {
 	defer cancel()
 
 	var URL string
-	query := "SELECT url FROM links WHERE key = $1 LIMIT 1"
-	err := s.db.QueryRowContext(ctx, query, key).Scan(&URL)
+	query := "SELECT url FROM links WHERE id = $1 LIMIT 1"
+	err := s.db.QueryRowContext(ctx, query, keyToNumber(key)).Scan(&URL)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -123,10 +144,10 @@ func (s *SQLStorage) GetURLs(keys []string) (map[string]string, error) {
 
 	for i, key := range keys {
 		placeholders = append(placeholders, fmt.Sprintf("$%d", i+1))
-		values = append(values, key)
+		values = append(values, keyToNumber(key))
 	}
 
-	query := "SELECT key, url FROM links WHERE key IN (" + strings.Join(placeholders, ", ") + ") LIMIT " + strconv.Itoa(len(keys))
+	query := "SELECT id, url FROM links WHERE id IN (" + strings.Join(placeholders, ", ") + ") LIMIT " + strconv.Itoa(len(keys))
 	rows, err := s.db.QueryContext(ctx, query, values...)
 
 	if err != nil {
@@ -138,15 +159,16 @@ func (s *SQLStorage) GetURLs(keys []string) (map[string]string, error) {
 	URLs := make(map[string]string, len(keys))
 
 	for rows.Next() {
-		var key, URL string
+		var id int
+		var URL string
 
-		err := rows.Scan(&key, &URL)
+		err := rows.Scan(&id, &URL)
 
 		if err != nil {
 			return nil, err
 		}
 
-		URLs[key] = URL
+		URLs[numberToKey(id)] = URL
 	}
 
 	if err = rows.Err(); err != nil {
@@ -156,6 +178,7 @@ func (s *SQLStorage) GetURLs(keys []string) (map[string]string, error) {
 	return URLs, nil
 }
 
+// todo remove
 func (s *SQLStorage) GetLastKey() (string, error) {
 	return s.lastKey, nil
 }

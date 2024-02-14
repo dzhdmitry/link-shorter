@@ -5,6 +5,15 @@ import (
 	"sync"
 )
 
+type StorageInterface interface {
+	StoreURLs(URLs []string) (map[string]string, error)
+	StoreKeysURLs([][]string) error
+	Restore() error
+	GetURL(string) (string, error)
+	GetURLs([]string) (map[string]string, error)
+	GetLastKey() (string, error)
+}
+
 type Collection struct {
 	generator generator.Generator
 	storage   StorageInterface

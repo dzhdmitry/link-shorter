@@ -7,18 +7,9 @@ import (
 )
 
 var Letters = "0123456789abcdefghijklmnopqrstuvwxyz"
+var alphabet = strings.Split(Letters, "")
 
-type Converter struct {
-	alphabet []string
-}
-
-func NewConverter() *Converter {
-	return &Converter{
-		alphabet: strings.Split(Letters, ""),
-	}
-}
-
-func (c *Converter) numberToKey(number int) string {
+func numberToKey(number int) string {
 	var digits []int
 
 	for {
@@ -26,15 +17,15 @@ func (c *Converter) numberToKey(number int) string {
 			break
 		}
 
-		reminder := number % len(c.alphabet)
-		number = number / len(c.alphabet)
+		reminder := number % len(alphabet)
+		number = number / len(alphabet)
 		digits = append(digits, reminder)
 	}
 
 	key := make([]string, len(digits))
 
 	for i, digit := range digits {
-		key[len(digits)-i-1] = c.alphabet[digit]
+		key[len(digits)-i-1] = alphabet[digit]
 	}
 
 	return strings.Join(key, "")
@@ -44,12 +35,12 @@ func pow(x float64, y int) int {
 	return int(math.Pow(x, float64(y)))
 }
 
-func (c *Converter) keyToNumber(key string) int {
+func keyToNumber(key string) int {
 	number := 0
-	alphabetLen := float64(len(c.alphabet))
+	alphabetLen := float64(len(alphabet))
 
 	for i, letter := range strings.Split(key, "") {
-		index := slices.Index(c.alphabet, letter)
+		index := slices.Index(alphabet, letter)
 		number += index * pow(alphabetLen, len(key)-i-1)
 	}
 

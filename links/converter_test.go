@@ -6,7 +6,6 @@ import (
 )
 
 func TestNumberToKey(t *testing.T) {
-	converter := NewConverter()
 	tests := []struct {
 		name        string
 		number      int
@@ -28,7 +27,7 @@ func TestNumberToKey(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			key := converter.numberToKey(tt.number)
+			key := numberToKey(tt.number)
 
 			assert.Equal(t, tt.expectedKey, key)
 		})
@@ -36,7 +35,6 @@ func TestNumberToKey(t *testing.T) {
 }
 
 func TestKeyToNumber(t *testing.T) {
-	converter := NewConverter()
 	tests := []struct {
 		name           string
 		key            string
@@ -58,7 +56,7 @@ func TestKeyToNumber(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			number := converter.keyToNumber(tt.key)
+			number := keyToNumber(tt.key)
 
 			assert.Equal(t, tt.expectedNumber, number)
 		})

@@ -26,6 +26,7 @@ func (s *SQLStorageSuite) SetupSuite() {
 
 func (s *SQLStorageSuite) SetupTest() {
 	_, _ = s.db.Exec("TRUNCATE links")
+	_, _ = s.db.Exec("ALTER SEQUENCE links_id_seq RESTART")
 }
 
 func (s *SQLStorageSuite) TearDownSuite() {
@@ -34,13 +35,14 @@ func (s *SQLStorageSuite) TearDownSuite() {
 	}
 }
 
-func (s *SQLStorageSuite) TestStoreKeysURLs() {
+func (s *SQLStorageSuite) TestStoreURLs() {
 	tests := []struct {
-		name   string
-		keyUrl [][]string
+		name     string
+		urls     []string
+		expected map[string]string
 	}{
-		{"Empty", [][]string{}},
-		{"Single row", [][]string{{"0", "http://example.com"}}},
+		{"Empty", []string{}, map[string]string{}},
+		{"Single row", []string{"https://example.com"}, map[string]string{"https://example.com": "1"}},
 	}
 
 	for _, tt := range tests {
@@ -49,25 +51,12 @@ func (s *SQLStorageSuite) TestStoreKeysURLs() {
 
 			s.NoError(err)
 
-			err = storage.StoreKeysURLs(tt.keyUrl)
+			data, err := storage.StoreURLs(tt.urls)
 
 			s.NoError(err)
+			s.Equal(tt.expected, data)
 		})
 	}
-}
-
-func (s *SQLStorageSuite) TestRestore() {
-	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('prev', 'prev-url')")
-	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('last', 'url')")
-
-	storage, err := NewSQLStorage(s.db, 1)
-
-	s.NoError(err)
-
-	lastKey, err := storage.GetLastKey()
-
-	s.NoError(err)
-	s.Equal("last", lastKey)
 }
 
 func (s *SQLStorageSuite) TestGetURL() {
@@ -78,10 +67,10 @@ func (s *SQLStorageSuite) TestGetURL() {
 	}{
 		{"Empty", "", ""},
 		{"Non-existing", "aawd1", ""},
-		{"Existing", "1q2w", "https://example.com"},
+		{"Existing", "1", "https://example.com"},
 	}
 
-	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('1q2w', 'https://example.com')")
+	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('1q2w', 'https://example.com')") //todo remove key
 	storage, err := NewSQLStorage(s.db, 1)
 
 	s.NoError(err)
@@ -104,14 +93,14 @@ func (s *SQLStorageSuite) TestGetURLs() {
 	}{
 		{"Empty", []string{"", ""}, map[string]string{}},
 		{"Non-existing", []string{"aawd1"}, map[string]string{}},
-		{"Existing", []string{"1q2w", "4hfc8"}, map[string]string{
-			"1q2w":  "https://example.com",
-			"4hfc8": "https://example2.com",
+		{"Existing", []string{"1", "2"}, map[string]string{
+			"1": "https://example.com",
+			"2": "https://example2.com",
 		}},
 	}
 
-	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('1q2w', 'https://example.com')")
-	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('4hfc8', 'https://example2.com')")
+	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('1q2w', 'https://example.com')")   //todo remove key
+	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('4hfc8', 'https://example2.com')") //todo remove key
 	storage, err := NewSQLStorage(s.db, 1)
 
 	s.NoError(err)

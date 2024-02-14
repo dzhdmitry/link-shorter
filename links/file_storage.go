@@ -6,13 +6,15 @@ import (
 	"io"
 	"link-shorter.dzhdmitry.net/application"
 	"os"
+	"strconv"
 	"sync"
 )
 
 type FileStorage struct {
-	filename string
-	links    map[string]string
-	lastKey  string
+	filename   string
+	links      map[string]string
+	lastKey    string
+	lastNumber int
 }
 
 func NewFileStorage(filename string) (*FileStorage, error) {
@@ -45,7 +47,22 @@ func (fs *FileStorage) persist(keysURLs [][]string) error {
 	return nil
 }
 
-func (fs *FileStorage) remember(keysURLs [][]string) {
+func (fs *FileStorage) generate(URLs []string) ([][]string, map[string]string) {
+	var keysURLs [][]string
+	keysByURLs := make(map[string]string, len(URLs))
+
+	for _, URL := range URLs {
+		fs.lastNumber++
+		key := numberToKey(fs.lastNumber)
+		keysURLs = append(keysURLs, []string{key, URL})
+		keysByURLs[URL] = key
+		// todo mutex
+	}
+
+	return keysURLs, keysByURLs
+}
+
+func (fs *FileStorage) remember(keysURLs [][]string) { // todo map?
 	for _, keysURL := range keysURLs {
 		key, URL := keysURL[0], keysURL[1]
 		fs.links[key] = URL
@@ -53,6 +70,20 @@ func (fs *FileStorage) remember(keysURLs [][]string) {
 	}
 }
 
+// StoreURLs Returns map with key=URL, value=key
+func (fs *FileStorage) StoreURLs(URLs []string) (map[string]string, error) {
+	keysURLs, keysByURLs := fs.generate(URLs)
+
+	if err := fs.persist(keysURLs); err != nil {
+		return nil, err
+	}
+
+	fs.remember(keysURLs)
+
+	return keysByURLs, nil
+}
+
+// todo remove
 func (fs *FileStorage) StoreKeysURLs(keysURLs [][]string) error {
 	if err := fs.persist(keysURLs); err != nil {
 		return err
@@ -77,7 +108,6 @@ func (fs *FileStorage) Restore() error {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	lastKey := ""
 
 	for {
 		record, err := reader.Read()
@@ -94,12 +124,11 @@ func (fs *FileStorage) Restore() error {
 			return errors.New("file has malformed data")
 		}
 
-		key, URL := record[0], record[1]
-		fs.links[key] = URL
-		lastKey = key
+		id, URL := record[0], record[1]
+		idx, _ := strconv.Atoi(id) // todo err
+		fs.links[numberToKey(idx)] = URL
+		fs.lastNumber = idx
 	}
-
-	fs.lastKey = lastKey
 
 	return nil
 }
@@ -120,6 +149,7 @@ func (fs *FileStorage) GetURLs(keys []string) (map[string]string, error) {
 	return URLs, nil
 }
 
+// todo delete
 func (fs *FileStorage) GetLastKey() (string, error) {
 	return fs.lastKey, nil
 }
@@ -145,6 +175,25 @@ func NewFileStorageAsync(logger *application.Logger, background *application.Bac
 	}, nil
 }
 
+func (fsa *FileStorageAsync) StoreURLs(URLs []string) (map[string]string, error) {
+	keysURLs, keysByURLs := fsa.fs.generate(URLs)
+
+	fsa.background.Run(func() {
+		fsa.mu.Lock()
+
+		defer fsa.mu.Unlock()
+
+		if err := fsa.fs.persist(keysURLs); err != nil {
+			fsa.logger.LogError(err)
+		}
+	})
+
+	fsa.fs.remember(keysURLs)
+
+	return keysByURLs, nil
+}
+
+// todo remove
 func (fsa *FileStorageAsync) StoreKeysURLs(keysURLs [][]string) error {
 	fsa.background.Run(func() {
 		fsa.mu.Lock()
@@ -173,6 +222,7 @@ func (fsa *FileStorageAsync) GetURLs(keys []string) (map[string]string, error) {
 	return fsa.fs.GetURLs(keys)
 }
 
+// todo remove
 func (fsa *FileStorageAsync) GetLastKey() (string, error) {
 	return fsa.fs.GetLastKey()
 }

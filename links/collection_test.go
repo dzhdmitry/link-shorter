@@ -11,6 +11,10 @@ type testStorage struct {
 	//
 }
 
+func (t *testStorage) StoreURLs(URLs []string) (map[string]string, error) {
+	return nil, nil
+}
+
 func (t *testStorage) StoreKeysURLs(keysURLs [][]string) error {
 	return nil
 }

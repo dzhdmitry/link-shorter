@@ -7,34 +7,34 @@ import (
 	"testing"
 )
 
-func TestStoreKeysURLs(t *testing.T) {
+func TestStoreURLs(t *testing.T) {
 	_ = os.Remove("./../testdata/results/test_store.csv")
 	s, err := NewFileStorage("./../testdata/results/test_store.csv")
 
 	require.NoError(t, err)
 
-	err = s.StoreKeysURLs([][]string{{"test-key", "https://example.com"}})
+	URLs, err := s.StoreURLs([]string{"https://example.com"})
 
+	require.Equal(t, map[string]string{"https://example.com": "1"}, URLs)
 	require.NoError(t, err)
 
 	data, err := os.ReadFile("./../testdata/results/test_store.csv")
 
-	require.Equal(t, "test-key,https://example.com\n", string(data))
-
+	require.Equal(t, "1,https://example.com\n", string(data))
 }
 
 func TestRestore(t *testing.T) {
 	tests := []struct {
 		name            string
 		filepath        string
-		expectedLastKey string
+		expectedLastKey int
 		expectedLinks   map[string]string
 	}{
-		{"Non-existed file", "./../testdata/non-existing.csv", "", map[string]string{}},
-		{"Regular file", "./../testdata/test_restore.csv", "test-key3", map[string]string{
-			"test-key":  "https://example1.com",
-			"test-key2": "https://example2.com",
-			"test-key3": "https://example3.com",
+		{"Non-existed file", "./../testdata/non-existing.csv", 0, map[string]string{}},
+		{"Regular file", "./../testdata/test_restore.csv", 3, map[string]string{
+			"1": "https://example1.com",
+			"2": "https://example2.com",
+			"3": "https://example3.com",
 		}},
 	}
 
@@ -47,11 +47,10 @@ func TestRestore(t *testing.T) {
 			err = s.Restore()
 
 			require.NoError(t, err)
-			require.Equal(t, tt.expectedLastKey, s.lastKey)
+			require.Equal(t, tt.expectedLastKey, s.lastNumber)
 			require.Equal(t, tt.expectedLinks, s.links)
 		})
 	}
-
 }
 
 func TestGetURL(t *testing.T) {
@@ -62,7 +61,7 @@ func TestGetURL(t *testing.T) {
 	}{
 		{"Empty", "", ""},
 		{"Non-existed", "1d32g", ""},
-		{"Regular", "test-key2", "https://example2.com"},
+		{"Regular", "2", "https://example2.com"},
 	}
 
 	s, _ := NewFileStorage("./../testdata/test_restore.csv")
@@ -86,9 +85,9 @@ func TestGetURLs(t *testing.T) {
 	}{
 		{"Empty", []string{"", ""}, map[string]string{}},
 		{"Non-existing", []string{"aawd1"}, map[string]string{}},
-		{"Existing", []string{"test-key2", "test-key3"}, map[string]string{
-			"test-key2": "https://example2.com",
-			"test-key3": "https://example3.com",
+		{"Existing", []string{"2", "3"}, map[string]string{
+			"2": "https://example2.com",
+			"3": "https://example3.com",
 		}},
 	}
 
@@ -105,31 +104,22 @@ func TestGetURLs(t *testing.T) {
 	}
 }
 
-func TestGetLastKey(t *testing.T) {
-	s, _ := NewFileStorage("./../testdata/test_restore.csv")
-	_ = s.Restore()
-
-	url, err := s.GetLastKey()
-
-	require.NoError(t, err)
-	require.Equal(t, "test-key3", url)
-}
-
-func TestAsyncStoreKeysURLs(t *testing.T) {
+func TestAsyncStoreURLs(t *testing.T) {
 	_ = os.Remove("./../testdata/results/test_store.csv")
 	background := &application.Background{}
 	s, err := NewFileStorageAsync(&application.Logger{}, background, "./../testdata/results/test_store.csv")
 
 	require.NoError(t, err)
 
-	err = s.StoreKeysURLs([][]string{{"test-key", "https://example.com"}})
+	URLs, err := s.StoreURLs([]string{"https://example.com"})
 
 	require.NoError(t, err)
+	require.Equal(t, map[string]string{"https://example.com": "1"}, URLs)
 
 	background.Wait()
 
 	data, err := os.ReadFile("./../testdata/results/test_store.csv")
 
-	require.Equal(t, "test-key,https://example.com\n", string(data))
+	require.Equal(t, "1,https://example.com\n", string(data))
 
 }
