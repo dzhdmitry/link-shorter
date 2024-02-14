@@ -14,6 +14,7 @@ type FileStorage struct {
 	filename   string
 	links      map[string]string
 	lastNumber int
+	mu         sync.Mutex
 }
 
 func NewFileStorage(filename string) (*FileStorage, error) {
@@ -47,6 +48,10 @@ func (fs *FileStorage) persist(keysURLs [][]string) error {
 }
 
 func (fs *FileStorage) generate(URLs []string) ([][]string, map[string]string) {
+	fs.mu.Lock()
+
+	defer fs.mu.Unlock()
+
 	var keysURLs [][]string
 	keysByURLs := make(map[string]string, len(URLs))
 
@@ -56,7 +61,6 @@ func (fs *FileStorage) generate(URLs []string) ([][]string, map[string]string) {
 		fs.links[key] = URL
 		keysURLs = append(keysURLs, []string{key, URL})
 		keysByURLs[URL] = key
-		// todo mutex
 	}
 
 	return keysURLs, keysByURLs

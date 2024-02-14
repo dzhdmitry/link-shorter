@@ -79,7 +79,7 @@ func (c *LFUCache) Get(key string) (interface{}, bool) {
 	return entry.value, ok
 }
 
-func (c *LFUCache) Put(key, value string) {
+func (c *LFUCache) Put(key string, value interface{}) {
 	c.mu.Lock()
 
 	defer c.mu.Unlock()

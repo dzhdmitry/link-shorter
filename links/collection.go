@@ -1,9 +1,5 @@
 package links
 
-import (
-	"sync"
-)
-
 type StorageInterface interface {
 	StoreURLs(URLs []string) (map[string]string, error)
 	Restore() error
@@ -13,7 +9,6 @@ type StorageInterface interface {
 
 type Collection struct {
 	storage StorageInterface
-	mu      sync.Mutex
 }
 
 func NewCollection(storage StorageInterface) *Collection {
@@ -31,17 +26,7 @@ func (c *Collection) GenerateKey(URL string) (string, error) {
 }
 
 func (c *Collection) GenerateKeys(URLs []string) (map[string]string, error) {
-	c.mu.Lock()
-
-	defer c.mu.Unlock()
-
-	keysByURLs, err := c.storage.StoreURLs(URLs)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return keysByURLs, nil
+	return c.storage.StoreURLs(URLs)
 }
 
 func (c *Collection) GetURL(key string) (string, error) {

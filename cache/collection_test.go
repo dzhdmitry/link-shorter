@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -35,8 +36,8 @@ func (c *testCache) Get(key string) (interface{}, bool) {
 	return v, ok
 }
 
-func (c *testCache) Put(key string, URL string) {
-	c.data[key] = URL
+func (c *testCache) Put(key string, URL interface{}) {
+	c.data[key] = fmt.Sprintf("%s", URL)
 }
 
 func TestGetURL(t *testing.T) {

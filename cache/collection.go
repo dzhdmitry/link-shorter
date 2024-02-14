@@ -7,7 +7,7 @@ import (
 
 type MemoryCacheInterface interface {
 	Get(string) (interface{}, bool)
-	Put(string, string)
+	Put(string, interface{})
 }
 
 type CachedCollection struct {
