@@ -40,7 +40,7 @@ func (c Container) createStorage(config application.Config) (links.StorageInterf
 			return nil, dbConn, err
 		}
 
-		storage, err = links.NewSQLStorage(dbConn, config.DbTimeout)
+		storage = links.NewSQLStorage(dbConn, config.DbTimeout)
 	} else {
 		return nil, nil, errors.New("unknown storage type: " + config.ProjectStorageType)
 	}

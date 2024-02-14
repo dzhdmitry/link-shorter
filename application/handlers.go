@@ -1,9 +1,7 @@
 package application
 
 import (
-	"errors"
 	"github.com/julienschmidt/httprouter"
-	"link-shorter.dzhdmitry.net/generator"
 	"net/http"
 )
 
@@ -36,11 +34,7 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 	key, err := app.Links.GenerateKey(data.URL)
 
 	if err != nil {
-		if errors.Is(err, generator.ErrLimitReached) {
-			app.errorResponse(w, r, http.StatusBadRequest, err.Error())
-		} else {
-			app.serverErrorResponse(w, r, err)
-		}
+		app.serverErrorResponse(w, r, err)
 
 		return
 	}
@@ -123,11 +117,7 @@ func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Requ
 	links, err := app.Links.GenerateKeys(data)
 
 	if err != nil {
-		if errors.Is(err, generator.ErrLimitReached) {
-			app.errorResponse(w, r, http.StatusBadRequest, err.Error())
-		} else {
-			app.serverErrorResponse(w, r, err)
-		}
+		app.serverErrorResponse(w, r, err)
 
 		return
 	}

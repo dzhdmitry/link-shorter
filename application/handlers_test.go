@@ -7,7 +7,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 	"io"
-	"link-shorter.dzhdmitry.net/generator"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -30,11 +29,6 @@ func newTestLinkStorage(maxKey int, links map[int]string) *testLinksCollection {
 
 func (t *testLinksCollection) GenerateKey(URL string) (string, error) {
 	key := t.lastKey + 1
-
-	if key > t.maxKey {
-		return "", generator.ErrLimitReached
-	}
-
 	t.links[key] = URL
 	t.lastKey = key
 
@@ -143,7 +137,6 @@ func TestGenerateHandlerBadRequest(t *testing.T) {
 		{"Invalid url #3", envelope{"url": "httpss://exmaple.com"}, http.StatusUnprocessableEntity, "URL must begin with http or https"},
 		{"Invalid url #4", envelope{"url": "exmaple.com"}, http.StatusUnprocessableEntity, "URL must be an absolute URL"},
 		{"Invalid url #5", envelope{"url": "/exmaple.com"}, http.StatusUnprocessableEntity, "URL must be an absolute URL"},
-		{"Over limit", envelope{"url": "http://example.com"}, http.StatusBadRequest, `limit reached`},
 	}
 
 	for _, tt := range tests {
@@ -172,7 +165,7 @@ func TestGenerateHandlerBadRequest(t *testing.T) {
 func TestGoHandlerOK(t *testing.T) {
 	app := Application{
 		Logger:    &Logger{out: io.Discard},
-		Validator: Validator{KeyMaxLength: 5},
+		Validator: *NewValidator(5, "1"),
 		Links: newTestLinkStorage(1, map[int]string{
 			1: "https://example.com",
 		}),
@@ -276,7 +269,6 @@ func TestBatchGenerateHandlerBadRequest(t *testing.T) {
 	}{
 		{"Unknown field", envelope{"unknown": "example"}, http.StatusBadRequest, `body contains incorrect JSON type (at character 1)`},
 		{"Empty url", []string{"link"}, http.StatusUnprocessableEntity, `URL must be an absolute URL`},
-		{"Limit reached", []string{"https://a1.com", "https://a2.com", "https://a3.com"}, http.StatusBadRequest, `limit reached`},
 	}
 
 	for _, tt := range tests {
@@ -305,7 +297,7 @@ func TestBatchGenerateHandlerBadRequest(t *testing.T) {
 func TestBatchGoHandlerOK(t *testing.T) {
 	app := Application{
 		Logger:    &Logger{out: io.Discard},
-		Validator: Validator{KeyMaxLength: 5},
+		Validator: *NewValidator(5, "12"),
 		Links: newTestLinkStorage(2, map[int]string{
 			1: "https://example.com",
 			2: "https://example2.com",
@@ -333,7 +325,7 @@ func TestBatchGoHandlerOK(t *testing.T) {
 func TestBatchGoHandlerBadRequest(t *testing.T) {
 	app := Application{
 		Logger:    &Logger{out: io.Discard},
-		Validator: Validator{KeyMaxLength: 5},
+		Validator: *NewValidator(5, "1"),
 		Links: newTestLinkStorage(2, map[int]string{
 			1: "http://example.com",
 		}),

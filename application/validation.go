@@ -2,12 +2,19 @@ package application
 
 import (
 	"errors"
-	"link-shorter.dzhdmitry.net/generator"
 	"net/url"
 )
 
 type Validator struct {
-	KeyMaxLength int
+	KeyMaxLength   int
+	allowedLetters string
+}
+
+func NewValidator(KeyMaxLength int, allowedLetters string) *Validator {
+	return &Validator{
+		KeyMaxLength:   KeyMaxLength,
+		allowedLetters: allowedLetters,
+	}
 }
 
 func (v *Validator) validateKey(key string) error {
@@ -22,7 +29,7 @@ func (v *Validator) validateKey(key string) error {
 	for _, keyLetter := range key {
 		found := false
 
-		for _, generatorLetter := range generator.Letters {
+		for _, generatorLetter := range v.allowedLetters {
 			if keyLetter == generatorLetter {
 				found = true
 

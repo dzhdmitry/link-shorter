@@ -4,6 +4,7 @@ import (
 	"github.com/caarlos0/env/v10"
 	"link-shorter.dzhdmitry.net/application"
 	"link-shorter.dzhdmitry.net/container"
+	"link-shorter.dzhdmitry.net/links"
 	"os"
 	"strconv"
 )
@@ -38,11 +39,9 @@ func main() {
 	}
 
 	app := application.Application{
-		Config: config,
-		Logger: logger,
-		Validator: application.Validator{
-			KeyMaxLength: config.ProjectKeyMaxLength,
-		},
+		Config:     config,
+		Logger:     logger,
+		Validator:  *application.NewValidator(config.ProjectKeyMaxLength, links.Letters),
 		Links:      linksCollection,
 		Background: background,
 	}

@@ -16,13 +16,13 @@ type SQLStorage struct {
 	lastKey string
 }
 
-func NewSQLStorage(db *sql.DB, timeout int) (*SQLStorage, error) {
+func NewSQLStorage(db *sql.DB, timeout int) *SQLStorage {
 	s := SQLStorage{
 		db:      db,
 		timeout: time.Second * time.Duration(timeout),
 	}
 
-	return &s, nil //todo remove nil
+	return &s
 }
 
 func (s *SQLStorage) StoreURLs(URLs []string) (map[string]string, error) {

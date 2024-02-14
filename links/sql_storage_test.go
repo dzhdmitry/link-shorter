@@ -47,10 +47,7 @@ func (s *SQLStorageSuite) TestStoreURLs() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			storage, err := NewSQLStorage(s.db, 1)
-
-			s.NoError(err)
-
+			storage := NewSQLStorage(s.db, 1)
 			data, err := storage.StoreURLs(tt.urls)
 
 			s.NoError(err)
@@ -71,9 +68,7 @@ func (s *SQLStorageSuite) TestGetURL() {
 	}
 
 	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('1q2w', 'https://example.com')") //todo remove key
-	storage, err := NewSQLStorage(s.db, 1)
-
-	s.NoError(err)
+	storage := NewSQLStorage(s.db, 1)
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
@@ -101,9 +96,7 @@ func (s *SQLStorageSuite) TestGetURLs() {
 
 	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('1q2w', 'https://example.com')")   //todo remove key
 	_, _ = s.db.Exec("INSERT INTO links (key, url) VALUES ('4hfc8', 'https://example2.com')") //todo remove key
-	storage, err := NewSQLStorage(s.db, 1)
-
-	s.NoError(err)
+	storage := NewSQLStorage(s.db, 1)
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
