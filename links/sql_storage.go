@@ -77,10 +77,6 @@ func (s *SQLStorage) StoreURLs(URLs []string) (map[string]string, error) {
 	return keysByURLs, nil
 }
 
-func (s *SQLStorage) Restore() error {
-	return nil
-}
-
 func (s *SQLStorage) GetURL(key string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 

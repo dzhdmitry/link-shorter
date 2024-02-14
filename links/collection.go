@@ -2,7 +2,6 @@ package links
 
 type StorageInterface interface {
 	StoreURLs(URLs []string) (map[string]string, error)
-	Restore() error
 	GetURL(string) (string, error)
 	GetURLs([]string) (map[string]string, error)
 }
