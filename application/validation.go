@@ -10,9 +10,8 @@ type Validator struct {
 	allowedLetters string
 }
 
-func NewValidator(KeyMaxLength int, allowedLetters string) *Validator {
+func NewValidator(allowedLetters string) *Validator {
 	return &Validator{
-		KeyMaxLength:   KeyMaxLength,
 		allowedLetters: allowedLetters,
 	}
 }
@@ -22,7 +21,7 @@ func (v *Validator) validateKey(key string) error {
 		return errors.New("key must be at least 1 letter long")
 	}
 
-	if len(key) > v.KeyMaxLength {
+	if len(key) > 10 {
 		return errors.New("key is invalid")
 	}
 

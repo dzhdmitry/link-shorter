@@ -41,7 +41,7 @@ func main() {
 	app := application.Application{
 		Config:     config,
 		Logger:     logger,
-		Validator:  *application.NewValidator(config.ProjectKeyMaxLength, links.Letters),
+		Validator:  *application.NewValidator(links.Letters),
 		Links:      linksCollection,
 		Background: background,
 	}

@@ -165,7 +165,7 @@ func TestGenerateHandlerBadRequest(t *testing.T) {
 func TestGoHandlerOK(t *testing.T) {
 	app := Application{
 		Logger:    &Logger{out: io.Discard},
-		Validator: *NewValidator(5, "1"),
+		Validator: *NewValidator("1"),
 		Links: newTestLinkStorage(1, map[int]string{
 			1: "https://example.com",
 		}),
@@ -193,7 +193,6 @@ func TestGoHandlerOK(t *testing.T) {
 
 func TestGoHandlerBadRequest(t *testing.T) {
 	app := Application{
-		Config: Config{ProjectKeyMaxLength: 5},
 		Logger: &Logger{out: io.Discard},
 		Links:  newTestLinkStorage(1, map[int]string{}),
 	}
@@ -204,7 +203,7 @@ func TestGoHandlerBadRequest(t *testing.T) {
 		errorMessage string
 	}{
 		{"Empty key", "", "key must be at least 1 letter long"},
-		{"Long key", "123456", "key is invalid"},
+		{"Long key", "0123456789a", "key is invalid"},
 	}
 
 	for _, tt := range tests {
@@ -297,7 +296,7 @@ func TestBatchGenerateHandlerBadRequest(t *testing.T) {
 func TestBatchGoHandlerOK(t *testing.T) {
 	app := Application{
 		Logger:    &Logger{out: io.Discard},
-		Validator: *NewValidator(5, "12"),
+		Validator: *NewValidator("12"),
 		Links: newTestLinkStorage(2, map[int]string{
 			1: "https://example.com",
 			2: "https://example2.com",
@@ -325,7 +324,7 @@ func TestBatchGoHandlerOK(t *testing.T) {
 func TestBatchGoHandlerBadRequest(t *testing.T) {
 	app := Application{
 		Logger:    &Logger{out: io.Discard},
-		Validator: *NewValidator(5, "1"),
+		Validator: *NewValidator("1"),
 		Links: newTestLinkStorage(2, map[int]string{
 			1: "http://example.com",
 		}),
