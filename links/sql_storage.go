@@ -39,12 +39,12 @@ func (s *SQLStorage) StoreURLs(URLs []string) (map[string]string, error) {
 	n := 1
 
 	for _, URL := range URLs {
-		placeholders = append(placeholders, fmt.Sprintf("($%d, $%d)", n, n+1))
-		values = append(values, "todo", URL)
-		n += 2
+		placeholders = append(placeholders, fmt.Sprintf("($%d)", n))
+		values = append(values, URL)
+		n++
 	}
 
-	query := "INSERT INTO links(key, url) VALUES " + strings.Join(placeholders, ", ") + " RETURNING id"
+	query := "INSERT INTO links(url) VALUES " + strings.Join(placeholders, ", ") + " RETURNING id"
 	rows, err := s.db.QueryContext(ctx, query, values...)
 
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *SQLStorage) StoreURLs(URLs []string) (map[string]string, error) {
 			return nil, err
 		}
 
-		key := numberToKey(id)
+		key := convertNumberToKey(id)
 		keysByURLs[URLs[i]] = key
 		i++
 	}
@@ -88,7 +88,7 @@ func (s *SQLStorage) GetURL(key string) (string, error) {
 
 	var URL string
 	query := "SELECT url FROM links WHERE id = $1 LIMIT 1"
-	err := s.db.QueryRowContext(ctx, query, keyToNumber(key)).Scan(&URL)
+	err := s.db.QueryRowContext(ctx, query, convertKeyToNumber(key)).Scan(&URL)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -111,7 +111,7 @@ func (s *SQLStorage) GetURLs(keys []string) (map[string]string, error) {
 
 	for i, key := range keys {
 		placeholders = append(placeholders, fmt.Sprintf("$%d", i+1))
-		values = append(values, keyToNumber(key))
+		values = append(values, convertKeyToNumber(key))
 	}
 
 	query := "SELECT id, url FROM links WHERE id IN (" + strings.Join(placeholders, ", ") + ") LIMIT " + strconv.Itoa(len(keys))
@@ -135,7 +135,7 @@ func (s *SQLStorage) GetURLs(keys []string) (map[string]string, error) {
 			return nil, err
 		}
 
-		URLs[numberToKey(id)] = URL
+		URLs[convertNumberToKey(id)] = URL
 	}
 
 	if err = rows.Err(); err != nil {

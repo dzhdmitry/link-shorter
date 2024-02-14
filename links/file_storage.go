@@ -52,7 +52,7 @@ func (fs *FileStorage) generate(URLs []string) ([][]string, map[string]string) {
 
 	for _, URL := range URLs {
 		fs.lastNumber++
-		key := numberToKey(fs.lastNumber)
+		key := convertNumberToKey(fs.lastNumber)
 		fs.links[key] = URL
 		keysURLs = append(keysURLs, []string{key, URL})
 		keysByURLs[URL] = key
@@ -110,7 +110,7 @@ func (fs *FileStorage) Restore() error {
 			return err
 		}
 
-		fs.links[numberToKey(id)] = URL
+		fs.links[convertNumberToKey(id)] = URL
 		fs.lastNumber = id
 	}
 

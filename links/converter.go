@@ -9,7 +9,7 @@ import (
 var Letters = "0123456789abcdefghijklmnopqrstuvwxyz"
 var alphabet = strings.Split(Letters, "")
 
-func numberToKey(number int) string {
+func convertNumberToKey(number int) string {
 	var digits []int
 
 	for {
@@ -35,7 +35,7 @@ func pow(x float64, y int) int {
 	return int(math.Pow(x, float64(y)))
 }
 
-func keyToNumber(key string) int {
+func convertKeyToNumber(key string) int {
 	number := 0
 	alphabetLen := float64(len(alphabet))
 
