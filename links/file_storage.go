@@ -13,7 +13,6 @@ import (
 type FileStorage struct {
 	filename   string
 	links      map[string]string
-	lastKey    string
 	lastNumber int
 }
 
@@ -54,20 +53,13 @@ func (fs *FileStorage) generate(URLs []string) ([][]string, map[string]string) {
 	for _, URL := range URLs {
 		fs.lastNumber++
 		key := numberToKey(fs.lastNumber)
+		fs.links[key] = URL
 		keysURLs = append(keysURLs, []string{key, URL})
 		keysByURLs[URL] = key
 		// todo mutex
 	}
 
 	return keysURLs, keysByURLs
-}
-
-func (fs *FileStorage) remember(keysURLs [][]string) { // todo map?
-	for _, keysURL := range keysURLs {
-		key, URL := keysURL[0], keysURL[1]
-		fs.links[key] = URL
-		fs.lastKey = key
-	}
 }
 
 // StoreURLs Returns map with key=URL, value=key
@@ -78,20 +70,7 @@ func (fs *FileStorage) StoreURLs(URLs []string) (map[string]string, error) {
 		return nil, err
 	}
 
-	fs.remember(keysURLs)
-
 	return keysByURLs, nil
-}
-
-// todo remove
-func (fs *FileStorage) StoreKeysURLs(keysURLs [][]string) error {
-	if err := fs.persist(keysURLs); err != nil {
-		return err
-	}
-
-	fs.remember(keysURLs)
-
-	return nil
 }
 
 func (fs *FileStorage) Restore() error {
@@ -124,10 +103,15 @@ func (fs *FileStorage) Restore() error {
 			return errors.New("file has malformed data")
 		}
 
-		id, URL := record[0], record[1]
-		idx, _ := strconv.Atoi(id) // todo err
-		fs.links[numberToKey(idx)] = URL
-		fs.lastNumber = idx
+		idRaw, URL := record[0], record[1]
+		id, err := strconv.Atoi(idRaw)
+
+		if err != nil {
+			return err
+		}
+
+		fs.links[numberToKey(id)] = URL
+		fs.lastNumber = id
 	}
 
 	return nil
@@ -140,18 +124,13 @@ func (fs *FileStorage) GetURL(key string) (string, error) {
 func (fs *FileStorage) GetURLs(keys []string) (map[string]string, error) {
 	URLs := make(map[string]string, len(keys))
 
-	for _, k := range keys {
-		if URL, ok := fs.links[k]; ok {
-			URLs[k] = URL
+	for _, key := range keys {
+		if URL, ok := fs.links[key]; ok {
+			URLs[key] = URL
 		}
 	}
 
 	return URLs, nil
-}
-
-// todo delete
-func (fs *FileStorage) GetLastKey() (string, error) {
-	return fs.lastKey, nil
 }
 
 type FileStorageAsync struct {
@@ -188,26 +167,7 @@ func (fsa *FileStorageAsync) StoreURLs(URLs []string) (map[string]string, error)
 		}
 	})
 
-	fsa.fs.remember(keysURLs)
-
 	return keysByURLs, nil
-}
-
-// todo remove
-func (fsa *FileStorageAsync) StoreKeysURLs(keysURLs [][]string) error {
-	fsa.background.Run(func() {
-		fsa.mu.Lock()
-
-		defer fsa.mu.Unlock()
-
-		if err := fsa.fs.persist(keysURLs); err != nil {
-			fsa.logger.LogError(err)
-		}
-	})
-
-	fsa.fs.remember(keysURLs)
-
-	return nil
 }
 
 func (fsa *FileStorageAsync) Restore() error {
@@ -220,9 +180,4 @@ func (fsa *FileStorageAsync) GetURL(key string) (string, error) {
 
 func (fsa *FileStorageAsync) GetURLs(keys []string) (map[string]string, error) {
 	return fsa.fs.GetURLs(keys)
-}
-
-// todo remove
-func (fsa *FileStorageAsync) GetLastKey() (string, error) {
-	return fsa.fs.GetLastKey()
 }

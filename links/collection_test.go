@@ -3,7 +3,7 @@ package links
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"link-shorter.dzhdmitry.net/generator"
+	"strconv"
 	"testing"
 )
 
@@ -12,11 +12,15 @@ type testStorage struct {
 }
 
 func (t *testStorage) StoreURLs(URLs []string) (map[string]string, error) {
-	return nil, nil
-}
+	result := map[string]string{}
+	i := 0
 
-func (t *testStorage) StoreKeysURLs(keysURLs [][]string) error {
-	return nil
+	for _, URL := range URLs {
+		i++
+		result[URL] = strconv.Itoa(i)
+	}
+
+	return result, nil
 }
 
 func (t *testStorage) Restore() error {
@@ -34,16 +38,12 @@ func (t *testStorage) GetURLs(keys []string) (map[string]string, error) {
 	}, nil
 }
 
-func (t *testStorage) GetLastKey() (string, error) {
-	return "", nil
-}
-
 func TestGenerateKey(t *testing.T) {
-	collection := NewCollection(*generator.NewGenerator(5), &testStorage{})
+	collection := NewCollection(&testStorage{})
 	key, err := collection.GenerateKey("http://links.ru")
 
 	require.NoError(t, err)
-	assert.Equal(t, "0", key)
+	assert.Equal(t, "1", key)
 }
 
 func TestGenerateKeys(t *testing.T) {
@@ -54,14 +54,14 @@ func TestGenerateKeys(t *testing.T) {
 	}{
 		{"Empty", []string{}, map[string]string{}},
 		{"Regular", []string{"https://example1", "https://example2"}, map[string]string{
-			"https://example1": "0",
-			"https://example2": "1",
+			"https://example1": "1",
+			"https://example2": "2",
 		}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			collection := NewCollection(*generator.NewGenerator(5), &testStorage{})
+			collection := NewCollection(&testStorage{})
 			keys, err := collection.GenerateKeys(tt.key)
 
 			require.NoError(t, err)
@@ -71,7 +71,7 @@ func TestGenerateKeys(t *testing.T) {
 }
 
 func TestGetLink(t *testing.T) {
-	collection := NewCollection(*generator.NewGenerator(5), &testStorage{})
+	collection := NewCollection(&testStorage{})
 	keys, err := collection.GetURL("2")
 
 	require.NoError(t, err)

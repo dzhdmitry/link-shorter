@@ -77,39 +77,6 @@ func (s *SQLStorage) StoreURLs(URLs []string) (map[string]string, error) {
 	return keysByURLs, nil
 }
 
-// todo delete
-func (s *SQLStorage) StoreKeysURLs(keysURLs [][]string) error {
-	if len(keysURLs) == 0 {
-		return nil
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
-
-	defer cancel()
-
-	var placeholders []string
-	var values []interface{}
-	n := 1
-
-	for _, keyURL := range keysURLs {
-		key, URL := keyURL[0], keyURL[1]
-		placeholders = append(placeholders, fmt.Sprintf("($%d, $%d)", n, n+1))
-		values = append(values, key, URL)
-		n += 2
-	}
-
-	query := "INSERT INTO links(key, url) VALUES " + strings.Join(placeholders, ", ")
-	_, err := s.db.ExecContext(ctx, query, values...)
-
-	if err != nil {
-		return err
-	}
-
-	s.lastKey = keysURLs[len(keysURLs)-1][0]
-
-	return nil
-}
-
 func (s *SQLStorage) Restore() error {
 	return nil
 }
@@ -176,9 +143,4 @@ func (s *SQLStorage) GetURLs(keys []string) (map[string]string, error) {
 	}
 
 	return URLs, nil
-}
-
-// todo remove
-func (s *SQLStorage) GetLastKey() (string, error) {
-	return s.lastKey, nil
 }

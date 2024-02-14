@@ -1,27 +1,23 @@
 package links
 
 import (
-	"link-shorter.dzhdmitry.net/generator"
 	"sync"
 )
 
 type StorageInterface interface {
 	StoreURLs(URLs []string) (map[string]string, error)
-	StoreKeysURLs([][]string) error
 	Restore() error
 	GetURL(string) (string, error)
 	GetURLs([]string) (map[string]string, error)
-	GetLastKey() (string, error)
 }
 
 type Collection struct {
-	generator generator.Generator
-	storage   StorageInterface
-	mu        sync.Mutex
+	storage StorageInterface
+	mu      sync.Mutex
 }
 
-func NewCollection(generator generator.Generator, storage StorageInterface) *Collection {
-	return &Collection{generator: generator, storage: storage}
+func NewCollection(storage StorageInterface) *Collection {
+	return &Collection{storage: storage}
 }
 
 func (c *Collection) GenerateKey(URL string) (string, error) {
@@ -39,29 +35,10 @@ func (c *Collection) GenerateKeys(URLs []string) (map[string]string, error) {
 
 	defer c.mu.Unlock()
 
-	lastKey, err := c.storage.GetLastKey()
+	keysByURLs, err := c.storage.StoreURLs(URLs)
 
 	if err != nil {
 		return nil, err
-	}
-
-	generatedKeysSorted, err := c.generator.GenerateMany(lastKey, URLs)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.storage.StoreKeysURLs(generatedKeysSorted)
-
-	if err != nil {
-		return nil, err
-	}
-
-	keysByURLs := make(map[string]string, len(generatedKeysSorted))
-
-	for _, keyURL := range generatedKeysSorted {
-		key, URL := keyURL[0], keyURL[1]
-		keysByURLs[URL] = key
 	}
 
 	return keysByURLs, nil

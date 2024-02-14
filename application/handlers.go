@@ -120,7 +120,7 @@ func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	URLsKeys, err := app.Links.GenerateKeys(data)
+	links, err := app.Links.GenerateKeys(data)
 
 	if err != nil {
 		if errors.Is(err, generator.ErrLimitReached) {
@@ -132,9 +132,7 @@ func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	links := make(map[string]string, len(URLsKeys))
-
-	for URL, key := range URLsKeys {
+	for URL, key := range links {
 		links[URL] = app.composeShortLink(key)
 	}
 

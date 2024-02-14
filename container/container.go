@@ -6,7 +6,6 @@ import (
 	"link-shorter.dzhdmitry.net/application"
 	"link-shorter.dzhdmitry.net/cache"
 	"link-shorter.dzhdmitry.net/db"
-	"link-shorter.dzhdmitry.net/generator"
 	"link-shorter.dzhdmitry.net/links"
 )
 
@@ -61,7 +60,7 @@ func (c Container) CreateLinksCollection(config application.Config) (application
 	}
 
 	var linksCollection application.LinksCollectionInterface
-	linksCollection = links.NewCollection(*generator.NewGenerator(config.ProjectKeyMaxLength), storage)
+	linksCollection = links.NewCollection(storage)
 
 	if config.CacheEnabled {
 		linksCollection = cache.NewCachedCollection(linksCollection, cache.NewLFUCache(config.CacheCapacity))
