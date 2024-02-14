@@ -15,47 +15,44 @@ import (
 )
 
 type Config struct {
-	ProjectHost         string `env:"PROJECT_HOST"`
-	ProjectPort         int    `env:"PROJECT_PORT"`
-	ProjectKeyMaxLength int    `env:"PROJECT_KEY_MAX_LENGTH"`
-	ProjectStorageType  string `env:"PROJECT_STORAGE_TYPE"`
-	FileAsync           bool   `env:"FILE_ASYNC"`
-	DbDSN               string `env:"DB_DSN"`
-	DbMaxOpenConns      int    `env:"DB_MAX_OPEN_CONNS"`
-	DbMaxIdleConns      int    `env:"DB_MAX_IDLE_CONNS"`
-	DbMaxIdleTime       string `env:"DB_MAX_OPEN_TIME"`
-	DbTimeout           int    `env:"DATABASE_TIMEOUT"`
-	CacheEnabled        bool   `env:"CACHE_ENABLED"`
-	CacheCapacity       int    `env:"CACHE_CAPACITY"`
-	LimiterEnabled      bool   `env:"LIMITER_ENABLED"`
-	LimiterRPS          int    `env:"LIMITER_RPS"`
-	LimiterBurst        int    `env:"LIMITER_BURST"`
+	ProjectHost        string `env:"PROJECT_HOST"`
+	ProjectPort        int    `env:"PROJECT_PORT"`
+	ProjectStorageType string `env:"PROJECT_STORAGE_TYPE"`
+	FileAsync          bool   `env:"FILE_ASYNC"`
+	DbDSN              string `env:"DB_DSN"`
+	DbMaxOpenConns     int    `env:"DB_MAX_OPEN_CONNS"`
+	DbMaxIdleConns     int    `env:"DB_MAX_IDLE_CONNS"`
+	DbMaxIdleTime      string `env:"DB_MAX_OPEN_TIME"`
+	DbTimeout          int    `env:"DATABASE_TIMEOUT"`
+	CacheEnabled       bool   `env:"CACHE_ENABLED"`
+	CacheCapacity      int    `env:"CACHE_CAPACITY"`
+	LimiterEnabled     bool   `env:"LIMITER_ENABLED"`
+	LimiterRPS         int    `env:"LIMITER_RPS"`
+	LimiterBurst       int    `env:"LIMITER_BURST"`
 }
 
 func NewConfig() Config {
 	return Config{
-		ProjectHost:         "",
-		ProjectPort:         80,
-		ProjectKeyMaxLength: 12,
-		ProjectStorageType:  "file",
-		FileAsync:           false,
-		DbDSN:               "postgres://go:pa55word@postgres:5432/short_links?sslmode=disable",
-		DbMaxOpenConns:      25,
-		DbMaxIdleConns:      25,
-		DbMaxIdleTime:       "15m",
-		DbTimeout:           1,
-		CacheEnabled:        false,
-		CacheCapacity:       0,
-		LimiterEnabled:      true,
-		LimiterRPS:          2,
-		LimiterBurst:        4,
+		ProjectHost:        "",
+		ProjectPort:        80,
+		ProjectStorageType: "file",
+		FileAsync:          false,
+		DbDSN:              "postgres://go:pa55word@postgres:5432/short_links?sslmode=disable",
+		DbMaxOpenConns:     25,
+		DbMaxIdleConns:     25,
+		DbMaxIdleTime:      "15m",
+		DbTimeout:          1,
+		CacheEnabled:       false,
+		CacheCapacity:      0,
+		LimiterEnabled:     true,
+		LimiterRPS:         2,
+		LimiterBurst:       4,
 	}
 }
 
 func (c *Config) Parse() {
 	flag.StringVar(&c.ProjectHost, "host", c.ProjectHost, "Project server host")
 	flag.IntVar(&c.ProjectPort, "port", c.ProjectPort, "Project server port")
-	flag.IntVar(&c.ProjectKeyMaxLength, "key-max", c.ProjectKeyMaxLength, "Max length of the key")
 	flag.StringVar(&c.ProjectStorageType, "storage", c.ProjectStorageType, "Storage type (file|postgres)")
 	flag.BoolVar(&c.FileAsync, "file-async", c.FileAsync, "File storage is asynchronous|synchronous (true|false)")
 	flag.StringVar(&c.DbDSN, "db-dsn", c.DbDSN, "PostgreSQL DSN")
@@ -77,7 +74,6 @@ func (c *Config) Info() string {
 		"   Project:",
 		fmt.Sprintf("      Host:                 %s", c.ProjectHost),
 		fmt.Sprintf("      Port:                 %d", c.ProjectPort),
-		fmt.Sprintf("      Key MaxLength:        %d", c.ProjectKeyMaxLength),
 		fmt.Sprintf("      Storage Type:         %s", c.ProjectStorageType),
 		"   File storage:",
 		fmt.Sprintf("      Is acync:             %t", c.FileAsync),
