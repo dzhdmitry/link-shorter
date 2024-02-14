@@ -17,14 +17,9 @@
 * postgreSQL
 * [golang-migrate](https://github.com/golang-migrate/migrate)
 
-### Установка
+### Установка и запуск
 
-`go migrate -path=./migrations -database=postgres://user:password@host:5432/short_links?sslmode=disable up`
-
-(заменить `user`, `password`, `host` требуемыми значениями)
-
-### Запуск
-
+`go migrate -path=./migrations -database=postgres://user:password@host:5432/short_links?sslmode=disable up` (заменить `user`, `password`, `host` требуемыми значениями)
 `go run .` (`go run . -help` для просмотра опций)
 </details>
 
@@ -42,7 +37,7 @@ make test-coverage
 
 Для каждой ссылки генерируется кототкий уникальный токен, состоящий из набора [0-9a-z] и получающийся путём применения биективной функции от порядкового номера ссылки.
 То есть, для 1-й ссылки будет токен `1`, для 10-й - `a`, для 10000-й - `7ps` и т.д.
-При поиске полной ссылки её номер получается обратным преобразованием `7ps` - №10000, `d3s4c` - №22011420 и т.д.
+При поиске полной ссылки её номер получается обратным преобразованием: `7ps` -> №10000, `d3s4c` -> №22011420 и т.д.
 
 Особенности:
 
