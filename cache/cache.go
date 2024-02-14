@@ -53,6 +53,10 @@ func (c *LFUCache) incrementFrequency(key string) {
 
 	if next == nil {
 		next = c.frequencies.PushBack(NewFrequencyEntry(freqRef.Value.(*FrequencyEntry).frequency + 1))
+	} else {
+		if next.Value.(*FrequencyEntry).frequency != freqRef.Value.(*FrequencyEntry).frequency+1 {
+			next = c.frequencies.InsertAfter(NewFrequencyEntry(freqRef.Value.(*FrequencyEntry).frequency+1), freqRef)
+		}
 	}
 
 	next.Value.(*FrequencyEntry).keys = append(next.Value.(*FrequencyEntry).keys, key)

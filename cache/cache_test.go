@@ -1,11 +1,38 @@
 package cache
 
 import (
+	"container/list"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
+
+func collectCachedEntries(cachedEntries map[string]*CachedEntry) map[string]string {
+	collectedEntries := map[string]string{}
+
+	for k, v := range cachedEntries {
+		collectedEntries[k] = fmt.Sprintf("%s", v.value)
+	}
+
+	return collectedEntries
+}
+
+func collectFrequencies(frequencies *list.List) map[int][]string {
+	e := frequencies.Front()
+	keysByFrequency := map[int][]string{}
+
+	for {
+		if e == nil {
+			break
+		}
+
+		keysByFrequency[e.Value.(*FrequencyEntry).frequency] = e.Value.(*FrequencyEntry).keys
+		e = e.Next()
+	}
+
+	return keysByFrequency
+}
 
 func TestGetNonExisting(t *testing.T) {
 	cache := NewLFUCache(5)
@@ -24,11 +51,12 @@ func TestGetExisting(t *testing.T) {
 
 	require.True(t, ok)
 	require.Equal(t, "url", URL)
-	require.Equal(t, []string{"a"}, cache.frequencies.Front().Value.(*FrequencyEntry).keys)
-	require.Equal(t, 1, cache.frequencies.Len())
+	assert.Equal(t, map[int][]string{
+		2: {"a"},
+	}, collectFrequencies(cache.frequencies))
 }
 
-func TestRemember(t *testing.T) {
+func TestPut(t *testing.T) {
 	cache := NewLFUCache(5)
 	links := [][]string{
 		{"a", "url1"},
@@ -42,7 +70,6 @@ func TestRemember(t *testing.T) {
 		cache.Put(key, URL)
 
 		require.Equal(t, URL, cache.cachedEntries[key].value)
-		require.Equal(t, []string{key}, cache.frequencies.Front().Value.(*FrequencyEntry).keys)
 
 		cachedURL, ok := cache.Get(key)
 
@@ -50,11 +77,12 @@ func TestRemember(t *testing.T) {
 		require.Equal(t, URL, cachedURL)
 	}
 
-	require.Equal(t, []string{"a", "b", "c"}, cache.frequencies.Front().Value.(*FrequencyEntry).keys)
-	require.Equal(t, 1, cache.frequencies.Len())
+	assert.Equal(t, map[int][]string{
+		2: {"a", "b", "c"},
+	}, collectFrequencies(cache.frequencies))
 }
 
-func TestRememberReplace(t *testing.T) {
+func TestPutEvict(t *testing.T) {
 	cache := NewLFUCache(3)
 
 	cache.Put("a", "url1")
@@ -64,24 +92,19 @@ func TestRememberReplace(t *testing.T) {
 	cache.Get("c")
 	cache.Put("d", "url4")
 
-	cachedEntries := map[string]string{}
-
-	for k, v := range cache.cachedEntries {
-		cachedEntries[k] = fmt.Sprintf("%s", v.value)
-	}
-
 	require.Equal(t, map[string]string{
 		"b": "url2",
 		"c": "url3",
 		"d": "url4",
-	}, cachedEntries)
+	}, collectCachedEntries(cache.cachedEntries))
 
-	assert.Equal(t, []string{"d"}, cache.frequencies.Front().Value.(*FrequencyEntry).keys)
-	assert.Equal(t, []string{"b", "c"}, cache.frequencies.Back().Value.(*FrequencyEntry).keys)
-	require.Equal(t, 2, cache.frequencies.Len())
+	assert.Equal(t, map[int][]string{
+		1: {"d"},
+		2: {"b", "c"},
+	}, collectFrequencies(cache.frequencies))
 }
 
-func TestRememberReplaceEmptyFirstFrequency(t *testing.T) {
+func TestPutEvictEmptyFirstFrequency(t *testing.T) {
 	cache := NewLFUCache(3)
 
 	cache.Put("a", "url1")
@@ -95,24 +118,19 @@ func TestRememberReplaceEmptyFirstFrequency(t *testing.T) {
 	cache.Get("c")
 	cache.Put("d", "url4")
 
-	cachedEntries := map[string]string{}
-
-	for k, v := range cache.cachedEntries {
-		cachedEntries[k] = fmt.Sprintf("%s", v.value)
-	}
-
 	require.Equal(t, map[string]string{
 		"b": "url2",
 		"c": "url3",
 		"d": "url4",
-	}, cachedEntries)
+	}, collectCachedEntries(cache.cachedEntries))
 
-	assert.Equal(t, []string{"d"}, cache.frequencies.Front().Value.(*FrequencyEntry).keys)
-	assert.Equal(t, []string{"b", "c"}, cache.frequencies.Back().Value.(*FrequencyEntry).keys)
-	require.Equal(t, 2, cache.frequencies.Len())
+	assert.Equal(t, map[int][]string{
+		1: {"d"},
+		3: {"b", "c"},
+	}, collectFrequencies(cache.frequencies))
 }
 
-func TestRememberReplaceFirstFrequency(t *testing.T) {
+func TestPutEvictFirstFrequency(t *testing.T) {
 	cache := NewLFUCache(6)
 	links := [][]string{
 		{"a", "url1"},
@@ -131,12 +149,6 @@ func TestRememberReplaceFirstFrequency(t *testing.T) {
 
 	cache.Put("g", "url7")
 
-	cachedEntries := map[string]string{}
-
-	for k, v := range cache.cachedEntries {
-		cachedEntries[k] = fmt.Sprintf("%s", v.value)
-	}
-
 	assert.Equal(t, map[string]string{
 		"b": "url2",
 		"c": "url3",
@@ -144,21 +156,19 @@ func TestRememberReplaceFirstFrequency(t *testing.T) {
 		"e": "url5",
 		"f": "url6",
 		"g": "url7",
-	}, cachedEntries)
+	}, collectCachedEntries(cache.cachedEntries))
 
-	keys := []string{"g", "b", "c", "d", "e", "f"}
-	e := cache.frequencies.Front()
-
-	for i := 0; i < len(keys); i++ {
-		assert.Equal(t, []string{keys[i]}, e.Value.(*FrequencyEntry).keys)
-
-		e = e.Next()
-	}
-
-	require.Equal(t, 6, cache.frequencies.Len())
+	assert.Equal(t, map[int][]string{
+		1: {"g"},
+		2: {"b"},
+		3: {"c"},
+		4: {"d"},
+		5: {"e"},
+		6: {"f"},
+	}, collectFrequencies(cache.frequencies))
 }
 
-func TestRememberReplaceMultiple(t *testing.T) {
+func TestPutEvictMultiple(t *testing.T) {
 	cache := NewLFUCache(3)
 
 	cache.Put("a", "url1")
@@ -171,19 +181,40 @@ func TestRememberReplaceMultiple(t *testing.T) {
 	cache.Put("e", "url5")
 	cache.Put("f", "url6")
 
-	cachedEntries := map[string]string{}
-
-	for k, v := range cache.cachedEntries {
-		cachedEntries[k] = fmt.Sprintf("%s", v.value)
-	}
-
 	assert.Equal(t, map[string]string{
 		"b": "url2",
 		"c": "url3",
 		"f": "url6",
-	}, cachedEntries)
+	}, collectCachedEntries(cache.cachedEntries))
 
-	assert.Equal(t, []string{"f"}, cache.frequencies.Front().Value.(*FrequencyEntry).keys)
-	assert.Equal(t, []string{"b", "c"}, cache.frequencies.Back().Value.(*FrequencyEntry).keys)
-	require.Equal(t, 2, cache.frequencies.Len())
+	assert.Equal(t, map[int][]string{
+		1: {"f"},
+		2: {"b", "c"},
+	}, collectFrequencies(cache.frequencies))
+}
+
+func TestPutRangeBetweenFrequencies(t *testing.T) {
+	cache := NewLFUCache(5)
+
+	cache.Put("a", "url1")
+	cache.Put("b", "url2")
+	cache.Put("c", "url3")
+	cache.Put("d", "url4")
+
+	cache.Get("a")
+	cache.Get("a")
+	cache.Get("b")
+
+	assert.Equal(t, map[string]string{
+		"a": "url1",
+		"b": "url2",
+		"c": "url3",
+		"d": "url4",
+	}, collectCachedEntries(cache.cachedEntries))
+
+	assert.Equal(t, map[int][]string{
+		1: {"c", "d"},
+		2: {"b"},
+		3: {"a"},
+	}, collectFrequencies(cache.frequencies))
 }
