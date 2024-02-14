@@ -57,14 +57,14 @@ make test-coverage
    * запрос: `{"URL": "http://a.com/path"}`
    * ответ: `{"link": "http://localhost/go/7pv"}`
 
-2. `POST http://localhost/go/:key`
+2. `GET http://localhost/go/:key`
    * ответ: `{"link": "http://localhost/go/7pv"}`
 
 3. `POST http://localhost/batch/generate`
    * запрос: `["http://a.com/path", "http://b.com/path"]`
    * ответ: `{"links": {"http://a.com/path": "http://localhost/go/7pv", "http://b.com/path": "http://localhost/go/5v6"}}`
 
-4. `POST http://localhost/batch/go`
+4. `GET http://localhost/batch/go`
    * запрос: `["7pv", "5v6"]`
    * ответ: `{"links": {"7pv": "http://a.com/path", "5v6":"http://b.com/path"}}`
 
