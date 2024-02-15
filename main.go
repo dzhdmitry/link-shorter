@@ -3,16 +3,17 @@ package main
 import (
 	"flag"
 	"github.com/caarlos0/env/v10"
-	"link-shorter.dzhdmitry.net/application"
-	"link-shorter.dzhdmitry.net/container"
-	"link-shorter.dzhdmitry.net/links"
+	"link-shorter.dzhdmitry.net/cmd/app"
+	"link-shorter.dzhdmitry.net/internal/container"
+	"link-shorter.dzhdmitry.net/internal/links"
+	"link-shorter.dzhdmitry.net/internal/utils"
 	"os"
 )
 
 func main() {
-	config := application.NewConfig()
-	logger := application.NewLogger(os.Stdout, &application.Clock{})
-	background := &application.Background{}
+	config := app.NewConfig()
+	logger := utils.NewLogger(os.Stdout, &utils.Clock{})
+	background := &utils.Background{}
 
 	if err := env.Parse(&config); err != nil {
 		logger.LogError(err)
@@ -56,10 +57,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	app := application.Application{
+	app := app.Application{
 		Config:     config,
 		Logger:     logger,
-		Validator:  *application.NewValidator(links.Letters),
+		Validator:  *app.NewValidator(links.Letters),
 		Links:      linksCollection,
 		Background: background,
 	}
