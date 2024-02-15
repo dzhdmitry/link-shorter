@@ -67,11 +67,11 @@ func (c *LFUCache) incrementFrequency(key string) {
 	}
 }
 
-func (c *LFUCache) Get(key string) (interface{}, bool) {
+func (c *LFUCache) Get(key string) (interface{}, bool, error) {
 	entry, ok := c.cachedEntries[key]
 
 	if !ok {
-		return "", false
+		return "", false, nil
 	}
 
 	c.mu.Lock()
@@ -80,10 +80,10 @@ func (c *LFUCache) Get(key string) (interface{}, bool) {
 
 	c.incrementFrequency(key)
 
-	return entry.value, ok
+	return entry.value, ok, nil
 }
 
-func (c *LFUCache) Put(key string, value interface{}) {
+func (c *LFUCache) Put(key string, value interface{}) error {
 	c.mu.Lock()
 
 	defer c.mu.Unlock()
@@ -92,7 +92,7 @@ func (c *LFUCache) Put(key string, value interface{}) {
 		// what if parallel task has already set key?
 		c.incrementFrequency(key)
 
-		return
+		return nil
 	}
 
 	if c.length >= c.capacity {
@@ -120,4 +120,6 @@ func (c *LFUCache) Put(key string, value interface{}) {
 
 	c.frequencies.Front().Value.(*FrequencyEntry).keys = append(c.frequencies.Front().Value.(*FrequencyEntry).keys, key)
 	c.cachedEntries[key] = &CachedEntry{value: value, freqRef: c.frequencies.Front()}
+
+	return nil
 }

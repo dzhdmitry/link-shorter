@@ -27,10 +27,14 @@ func main() {
 		Background: background,
 	}
 
-	linksCollection, dbConn, err := Container.CreateLinksCollection(config)
+	linksCollection, dbConn, rdb, err := Container.CreateLinksCollection(config)
 
 	if dbConn != nil {
 		defer dbConn.Close()
+	}
+
+	if rdb != nil {
+		defer rdb.Close()
 	}
 
 	if err != nil {

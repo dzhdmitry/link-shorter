@@ -5,17 +5,17 @@ import (
 	"link-shorter.dzhdmitry.net/application"
 )
 
-type MemoryCacheInterface interface {
-	Get(string) (interface{}, bool)
-	Put(string, interface{})
+type LinksCacheInterface interface {
+	Get(string) (interface{}, bool, error)
+	Put(string, interface{}) error
 }
 
 type CachedCollection struct {
 	collection application.LinksCollectionInterface
-	cache      MemoryCacheInterface
+	cache      LinksCacheInterface
 }
 
-func NewCachedCollection(collection application.LinksCollectionInterface, cache MemoryCacheInterface) *CachedCollection {
+func NewCachedCollection(collection application.LinksCollectionInterface, cache LinksCacheInterface) *CachedCollection {
 	return &CachedCollection{
 		collection: collection,
 		cache:      cache,
@@ -31,7 +31,11 @@ func (c *CachedCollection) GenerateKeys(URLs []string) (map[string]string, error
 }
 
 func (c *CachedCollection) GetURL(key string) (string, error) {
-	cachedURL, ok := c.cache.Get(key)
+	cachedURL, ok, err := c.cache.Get(key)
+
+	if err != nil {
+		return "", err
+	}
 
 	if ok {
 		return fmt.Sprintf("%s", cachedURL), nil
@@ -43,9 +47,11 @@ func (c *CachedCollection) GetURL(key string) (string, error) {
 		return "", err
 	}
 
-	c.cache.Put(key, URL)
+	if URL != "" {
+		err = c.cache.Put(key, URL)
+	}
 
-	return URL, nil
+	return URL, err
 }
 
 func (c *CachedCollection) GetURLs(keys []string) (map[string]string, error) {

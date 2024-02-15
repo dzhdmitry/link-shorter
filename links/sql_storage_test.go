@@ -15,7 +15,7 @@ type SQLStorageSuite struct {
 }
 
 func (s *SQLStorageSuite) SetupSuite() {
-	openDB, err := db.Open(db.PrepareTestDB(), 25, 25, "15m")
+	openDB, err := db.OpenPostgres(db.PrepareTestDB(), 25, 25, "15m")
 
 	if err != nil {
 		panic(err)

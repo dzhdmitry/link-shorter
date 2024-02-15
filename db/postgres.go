@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func Open(dsn string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*sql.DB, error) {
+func OpenPostgres(dsn string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dsn)
 
 	if err != nil {
@@ -58,7 +58,7 @@ func ResolveTestDSNs() (string, string) {
 
 func PrepareTestDB() string {
 	defaultDsn, dsn := ResolveTestDSNs()
-	db, err := Open(defaultDsn, 25, 25, "15m")
+	db, err := OpenPostgres(defaultDsn, 25, 25, "15m")
 
 	if err != nil {
 		panic(err)

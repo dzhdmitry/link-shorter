@@ -30,14 +30,15 @@ type testCache struct {
 	data map[string]string
 }
 
-func (c *testCache) Get(key string) (interface{}, bool) {
+func (c *testCache) Get(key string) (interface{}, bool, error) {
 	v, ok := c.data[key]
 
-	return v, ok
+	return v, ok, nil
 }
 
-func (c *testCache) Put(key string, URL interface{}) {
+func (c *testCache) Put(key string, URL interface{}) error {
 	c.data[key] = fmt.Sprintf("%s", URL)
+	return nil
 }
 
 func TestGetURL(t *testing.T) {

@@ -36,7 +36,7 @@ func collectFrequencies(frequencies *list.List) map[int][]string {
 
 func TestGetNonExisting(t *testing.T) {
 	cache := NewLFUCache(5)
-	URL, ok := cache.Get("a")
+	URL, ok, _ := cache.Get("a")
 
 	require.False(t, ok)
 	require.Equal(t, "", URL)
@@ -45,9 +45,9 @@ func TestGetNonExisting(t *testing.T) {
 func TestGetExisting(t *testing.T) {
 	cache := NewLFUCache(5)
 
-	cache.Put("a", "url")
+	_ = cache.Put("a", "url")
 
-	URL, ok := cache.Get("a")
+	URL, ok, _ := cache.Get("a")
 
 	require.True(t, ok)
 	require.Equal(t, "url", URL)
@@ -67,11 +67,11 @@ func TestPut(t *testing.T) {
 	for _, keyURL := range links {
 		key, URL := keyURL[0], keyURL[1]
 
-		cache.Put(key, URL)
+		_ = cache.Put(key, URL)
 
 		require.Equal(t, URL, cache.cachedEntries[key].value)
 
-		cachedURL, ok := cache.Get(key)
+		cachedURL, ok, _ := cache.Get(key)
 
 		require.True(t, ok)
 		require.Equal(t, URL, cachedURL)
@@ -85,12 +85,12 @@ func TestPut(t *testing.T) {
 func TestPutEvict(t *testing.T) {
 	cache := NewLFUCache(3)
 
-	cache.Put("a", "url1")
-	cache.Put("b", "url2")
-	cache.Put("c", "url3")
-	cache.Get("b")
-	cache.Get("c")
-	cache.Put("d", "url4")
+	_ = cache.Put("a", "url1")
+	_ = cache.Put("b", "url2")
+	_ = cache.Put("c", "url3")
+	_, _, _ = cache.Get("b")
+	_, _, _ = cache.Get("c")
+	_ = cache.Put("d", "url4")
 
 	require.Equal(t, map[string]string{
 		"b": "url2",
@@ -107,16 +107,16 @@ func TestPutEvict(t *testing.T) {
 func TestPutEvictEmptyFirstFrequency(t *testing.T) {
 	cache := NewLFUCache(3)
 
-	cache.Put("a", "url1")
-	cache.Put("b", "url2")
-	cache.Put("c", "url3")
-	cache.Get("a")
-	cache.Get("b")
-	cache.Get("c")
-	cache.Get("a")
-	cache.Get("b")
-	cache.Get("c")
-	cache.Put("d", "url4")
+	_ = cache.Put("a", "url1")
+	_ = cache.Put("b", "url2")
+	_ = cache.Put("c", "url3")
+	_, _, _ = cache.Get("a")
+	_, _, _ = cache.Get("b")
+	_, _, _ = cache.Get("c")
+	_, _, _ = cache.Get("a")
+	_, _, _ = cache.Get("b")
+	_, _, _ = cache.Get("c")
+	_ = cache.Put("d", "url4")
 
 	require.Equal(t, map[string]string{
 		"b": "url2",
@@ -143,11 +143,11 @@ func TestPutEvictFirstFrequency(t *testing.T) {
 
 	for i := 0; i < len(links); i++ {
 		for j := 0; j < i+1; j++ {
-			cache.Put(links[i][0], links[i][1])
+			_ = cache.Put(links[i][0], links[i][1])
 		}
 	}
 
-	cache.Put("g", "url7")
+	_ = cache.Put("g", "url7")
 
 	assert.Equal(t, map[string]string{
 		"b": "url2",
@@ -171,15 +171,15 @@ func TestPutEvictFirstFrequency(t *testing.T) {
 func TestPutEvictMultiple(t *testing.T) {
 	cache := NewLFUCache(3)
 
-	cache.Put("a", "url1")
-	cache.Put("b", "url2")
-	cache.Put("c", "url3")
-	cache.Get("a")
-	cache.Get("b")
-	cache.Get("c")
-	cache.Put("d", "url4")
-	cache.Put("e", "url5")
-	cache.Put("f", "url6")
+	_ = cache.Put("a", "url1")
+	_ = cache.Put("b", "url2")
+	_ = cache.Put("c", "url3")
+	_, _, _ = cache.Get("a")
+	_, _, _ = cache.Get("b")
+	_, _, _ = cache.Get("c")
+	_ = cache.Put("d", "url4")
+	_ = cache.Put("e", "url5")
+	_ = cache.Put("f", "url6")
 
 	assert.Equal(t, map[string]string{
 		"b": "url2",
@@ -196,14 +196,14 @@ func TestPutEvictMultiple(t *testing.T) {
 func TestPutRangeBetweenFrequencies(t *testing.T) {
 	cache := NewLFUCache(5)
 
-	cache.Put("a", "url1")
-	cache.Put("b", "url2")
-	cache.Put("c", "url3")
-	cache.Put("d", "url4")
+	_ = cache.Put("a", "url1")
+	_ = cache.Put("b", "url2")
+	_ = cache.Put("c", "url3")
+	_ = cache.Put("d", "url4")
 
-	cache.Get("a")
-	cache.Get("a")
-	cache.Get("b")
+	_, _, _ = cache.Get("a")
+	_, _, _ = cache.Get("a")
+	_, _, _ = cache.Get("b")
 
 	assert.Equal(t, map[string]string{
 		"a": "url1",

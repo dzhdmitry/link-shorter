@@ -15,6 +15,7 @@
 
 * go 1.21
 * postgreSQL
+* redis
 * [golang-migrate](https://github.com/golang-migrate/migrate)
 
 ### Установка и запуск

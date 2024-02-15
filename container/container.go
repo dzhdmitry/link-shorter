@@ -3,6 +3,7 @@ package container
 import (
 	"database/sql"
 	"errors"
+	"github.com/redis/go-redis/v9"
 	"link-shorter.dzhdmitry.net/application"
 	"link-shorter.dzhdmitry.net/cache"
 	"link-shorter.dzhdmitry.net/db"
@@ -10,15 +11,13 @@ import (
 )
 
 const storageFilename = "tmp/storage.csv"
-const storageTypeFile = "file"
-const storageTypePostgres = "postgres"
 
 type Container struct {
 	Logger     *application.Logger
 	Background *application.Background
 }
 
-func (c Container) createFileStorage(async bool) (links.StorageInterface, error) {
+func (c *Container) createFileStorage(async bool) (links.StorageInterface, error) {
 	if async {
 		return links.NewFileStorageAsync(c.Logger, c.Background, storageFilename)
 	}
@@ -26,15 +25,15 @@ func (c Container) createFileStorage(async bool) (links.StorageInterface, error)
 	return links.NewFileStorage(storageFilename)
 }
 
-func (c Container) createStorage(config application.Config) (links.StorageInterface, *sql.DB, error) {
+func (c *Container) createStorage(config application.Config) (links.StorageInterface, *sql.DB, error) {
 	var storage links.StorageInterface
-	var err error
 	var dbConn *sql.DB
+	var err error
 
-	if config.ProjectStorageType == storageTypeFile {
+	if config.ProjectStorageType == application.StorageTypeFile {
 		storage, err = c.createFileStorage(config.FileAsync)
-	} else if config.ProjectStorageType == storageTypePostgres {
-		dbConn, err = db.Open(config.DbDSN, config.DbMaxOpenConns, config.DbMaxIdleConns, config.DbMaxIdleTime)
+	} else if config.ProjectStorageType == application.StorageTypePostgres {
+		dbConn, err = db.OpenPostgres(config.DbDSN, config.DbMaxOpenConns, config.DbMaxIdleConns, config.DbMaxIdleTime)
 
 		if err != nil {
 			return nil, dbConn, err
@@ -52,19 +51,49 @@ func (c Container) createStorage(config application.Config) (links.StorageInterf
 	return storage, dbConn, nil
 }
 
-func (c Container) CreateLinksCollection(config application.Config) (application.LinksCollectionInterface, *sql.DB, error) {
+func (c *Container) createCache(config application.Config) (cache.LinksCacheInterface, *redis.Client, error) {
+	var linksCache cache.LinksCacheInterface
+	var rdb *redis.Client
+	var err error
+
+	if config.CacheType == application.CacheTypeInMemory {
+		linksCache = cache.NewLFUCache(config.CacheCapacity)
+	} else if config.CacheType == application.CacheTypeRedis {
+		rdb, err = db.OpenRedis(config.CacheRedisDSN)
+
+		if err != nil {
+			return nil, rdb, err
+		}
+
+		linksCache = cache.NewRedisCache(rdb)
+	} else if config.CacheType != application.CacheTypeDisabled {
+		return nil, nil, errors.New("unknown cache type: " + config.CacheType)
+	}
+
+	return linksCache, rdb, nil
+}
+
+func (c *Container) CreateLinksCollection(config application.Config) (application.LinksCollectionInterface, *sql.DB, *redis.Client, error) {
 	storage, dbConn, err := c.createStorage(config)
 
 	if err != nil {
-		return nil, dbConn, err
+		return nil, dbConn, nil, err
 	}
 
 	var linksCollection application.LinksCollectionInterface
 	linksCollection = links.NewCollection(storage)
 
-	if config.CacheEnabled {
-		linksCollection = cache.NewCachedCollection(linksCollection, cache.NewLFUCache(config.CacheCapacity))
+	if config.CacheType == application.CacheTypeDisabled {
+		return linksCollection, dbConn, nil, nil
 	}
 
-	return linksCollection, dbConn, nil
+	linksCache, rdb, err := c.createCache(config)
+
+	if err != nil {
+		return nil, dbConn, rdb, err
+	}
+
+	linksCollection = cache.NewCachedCollection(linksCollection, linksCache)
+
+	return linksCollection, dbConn, rdb, nil
 }

@@ -14,6 +14,12 @@ import (
 	"time"
 )
 
+const StorageTypeFile = "file"
+const StorageTypePostgres = "postgres"
+const CacheTypeDisabled = "disabled"
+const CacheTypeInMemory = "in-memory"
+const CacheTypeRedis = "redis"
+
 type Config struct {
 	ProjectHost        string `env:"PROJECT_HOST"`
 	ProjectPort        int    `env:"PROJECT_PORT"`
@@ -24,8 +30,9 @@ type Config struct {
 	DbMaxIdleConns     int    `env:"DB_MAX_IDLE_CONNS"`
 	DbMaxIdleTime      string `env:"DB_MAX_OPEN_TIME"`
 	DbTimeout          int    `env:"DATABASE_TIMEOUT"`
-	CacheEnabled       bool   `env:"CACHE_ENABLED"`
+	CacheType          string `env:"CACHE_TYPE"`
 	CacheCapacity      int    `env:"CACHE_CAPACITY"`
+	CacheRedisDSN      string `env:"CACHE_REDIS_DSN"`
 	LimiterEnabled     bool   `env:"LIMITER_ENABLED"`
 	LimiterRPS         int    `env:"LIMITER_RPS"`
 	LimiterBurst       int    `env:"LIMITER_BURST"`
@@ -35,15 +42,16 @@ func NewConfig() Config {
 	return Config{
 		ProjectHost:        "",
 		ProjectPort:        80,
-		ProjectStorageType: "file",
+		ProjectStorageType: StorageTypeFile,
 		FileAsync:          false,
 		DbDSN:              "postgres://go:pa55word@postgres:5432/short_links?sslmode=disable",
 		DbMaxOpenConns:     25,
 		DbMaxIdleConns:     25,
 		DbMaxIdleTime:      "15m",
 		DbTimeout:          1,
-		CacheEnabled:       false,
+		CacheType:          CacheTypeDisabled,
 		CacheCapacity:      0,
+		CacheRedisDSN:      "redis://redis:6379/0",
 		LimiterEnabled:     true,
 		LimiterRPS:         2,
 		LimiterBurst:       4,
@@ -60,8 +68,9 @@ func (c *Config) Parse() {
 	flag.IntVar(&c.DbMaxIdleConns, "db-max-idle-conns", c.DbMaxIdleConns, "PostgreSQL max idle connections")
 	flag.StringVar(&c.DbMaxIdleTime, "db-max-idle-time", c.DbMaxIdleTime, "PostgreSQL max connection idle time")
 	flag.IntVar(&c.DbTimeout, "db-timeout", c.DbTimeout, "PostgreSQL queries execution timeout")
-	flag.BoolVar(&c.CacheEnabled, "cache", c.CacheEnabled, "Caching of short links enabled")
-	flag.IntVar(&c.CacheCapacity, "cache-cap", c.CacheCapacity, "Capacity of cache")
+	flag.StringVar(&c.CacheType, "cache", c.CacheType, "Cache type (disabled|in-memory|redis)")
+	flag.IntVar(&c.CacheCapacity, "cache-cap", c.CacheCapacity, "Capacity of in-memory cache")
+	flag.StringVar(&c.CacheRedisDSN, "redis", c.CacheRedisDSN, "Redis DSN")
 	flag.BoolVar(&c.LimiterEnabled, "limiter", c.LimiterEnabled, "Rate limiter is enabled")
 	flag.IntVar(&c.LimiterRPS, "limiter-rps", c.LimiterRPS, "Rate limiter maximum RPS per IP")
 	flag.IntVar(&c.LimiterBurst, "limiter-burst", c.LimiterBurst, "Rate limiter maximum burst")
@@ -84,8 +93,9 @@ func (c *Config) Info() string {
 		fmt.Sprintf("      Max idle time:        %s", c.DbMaxIdleTime),
 		fmt.Sprintf("      Timeout (seconds):    %d", c.DbTimeout),
 		"   Cache:",
-		fmt.Sprintf("      Caching enabled:      %t", c.CacheEnabled),
+		fmt.Sprintf("      Type:                 %s", c.CacheType),
 		fmt.Sprintf("      Capacity of cache:    %d", c.CacheCapacity),
+		fmt.Sprintf("      Redis DSN:            %s", c.CacheRedisDSN),
 		"   Rate limiter:",
 		fmt.Sprintf("      Rate limiter enabled: %t", c.LimiterEnabled),
 		fmt.Sprintf("      RPS per IP:           %d", c.LimiterRPS),
