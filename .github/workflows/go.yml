@@ -2,7 +2,7 @@ name: Link shorter
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "redis" ]
   pull_request:
     branches: [ "main" ]
 
@@ -12,7 +12,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres:13-alpine
         env:
           POSTGRES_DB: short_links
           POSTGRES_PASSWORD: secret
@@ -24,20 +24,25 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis:7.2.4-alpine
+        ports:
+          - 6379:6379
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
 
-    - name: Build
-      run: go build -v ./...
+      - name: Build
+        run: go build -v ./...
 
-    - name: Test
-      run: go test -v ./...
-      env:
-        TEST_DEFAULT_DSN: postgres://go:secret@localhost:5432/short_links?sslmode=disable
-        TEST_DSN: postgres://go:secret@localhost:5432/short_links?sslmode=disable
+      - name: Test
+        run: go test -v ./...
+        env:
+          TEST_DEFAULT_DSN: postgres://go:secret@localhost:5432/short_links?sslmode=disable
+          TEST_DSN: postgres://go:secret@localhost:5432/short_links?sslmode=disable
+          TEST_REDIS_DSN: redis://localhost:6379/1
