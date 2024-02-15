@@ -9,16 +9,16 @@ import (
 var Letters = "0123456789abcdefghijklmnopqrstuvwxyz"
 var alphabet = strings.Split(Letters, "")
 
-func convertNumberToKey(number int) string {
-	var digits []int
+func convertNumberToKey(number int64) string {
+	var digits []int64
 
 	for {
 		if number == 0 {
 			break
 		}
 
-		reminder := number % len(alphabet)
-		number = number / len(alphabet)
+		reminder := number % int64(len(alphabet))
+		number = number / int64(len(alphabet))
 		digits = append(digits, reminder)
 	}
 
@@ -31,16 +31,16 @@ func convertNumberToKey(number int) string {
 	return strings.Join(key, "")
 }
 
-func pow(x float64, y int) int {
-	return int(math.Pow(x, float64(y)))
+func pow(x float64, y int) int64 {
+	return int64(math.Pow(x, float64(y)))
 }
 
-func convertKeyToNumber(key string) int {
-	number := 0
+func convertKeyToNumber(key string) int64 {
+	number := int64(0)
 	alphabetLen := float64(len(alphabet))
 
 	for i, letter := range strings.Split(key, "") {
-		index := slices.Index(alphabet, letter)
+		index := int64(slices.Index(alphabet, letter))
 		number += index * pow(alphabetLen, len(key)-i-1)
 	}
 

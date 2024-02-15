@@ -27,7 +27,7 @@ func TestRestore(t *testing.T) {
 	tests := []struct {
 		name            string
 		filepath        string
-		expectedLastKey int
+		expectedLastKey int64
 		expectedLinks   map[string]string
 	}{
 		{"Non-existed file", "./../testdata/non-existing.csv", 0, map[string]string{}},

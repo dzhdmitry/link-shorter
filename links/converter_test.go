@@ -27,7 +27,7 @@ func TestNumberToKey(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			key := convertNumberToKey(tt.number)
+			key := convertNumberToKey(int64(tt.number))
 
 			assert.Equal(t, tt.expectedKey, key)
 		})
@@ -58,7 +58,7 @@ func TestKeyToNumber(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			number := convertKeyToNumber(tt.key)
 
-			assert.Equal(t, tt.expectedNumber, number)
+			assert.Equal(t, int64(tt.expectedNumber), number)
 		})
 	}
 }

@@ -13,7 +13,7 @@ import (
 type FileStorage struct {
 	filename   string
 	links      map[string]string
-	lastNumber int
+	lastNumber int64
 	mu         sync.Mutex
 }
 
@@ -108,7 +108,7 @@ func (fs *FileStorage) Restore() error {
 		}
 
 		idRaw, URL := record[0], record[1]
-		id, err := strconv.Atoi(idRaw)
+		id, err := strconv.ParseInt(idRaw, 10, 64)
 
 		if err != nil {
 			return err

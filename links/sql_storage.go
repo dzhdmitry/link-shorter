@@ -57,7 +57,7 @@ func (s *SQLStorage) StoreURLs(URLs []string) (map[string]string, error) {
 	i := 0
 
 	for rows.Next() {
-		var id int
+		var id int64
 
 		err := rows.Scan(&id)
 
@@ -122,7 +122,7 @@ func (s *SQLStorage) GetURLs(keys []string) (map[string]string, error) {
 	URLs := make(map[string]string, len(keys))
 
 	for rows.Next() {
-		var id int
+		var id int64
 		var URL string
 
 		err := rows.Scan(&id, &URL)
