@@ -55,7 +55,24 @@ func TestGetURL(t *testing.T) {
 	require.Equal(t, "url", url)
 }
 
-func TestGetURLRemember(t *testing.T) {
+func TestGetURLs(t *testing.T) {
+	c := NewCachedCollection(
+		&testCollection{},
+		&testCache{
+			data: map[string]string{
+				"a": "url1",
+				"b": "url2",
+			},
+		},
+	)
+
+	URLs, err := c.GetURLs([]string{"a", "b", "c"})
+
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"a": "url1", "b": "url2", "c": "url"}, URLs)
+}
+
+func TestGetURLPut(t *testing.T) {
 	cache := &testCache{
 		data: map[string]string{},
 	}

@@ -3,6 +3,7 @@ package links
 import (
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"link-shorter.dzhdmitry.net/application"
 	"os"
@@ -12,13 +13,13 @@ import (
 
 type FileStorage struct {
 	filename   string
-	links      map[string]string
+	links      map[int64]string
 	lastNumber int64
 	mu         sync.Mutex
 }
 
 func NewFileStorage(filename string) (*FileStorage, error) {
-	s := FileStorage{filename: filename, links: map[string]string{}}
+	s := FileStorage{filename: filename, links: map[int64]string{}}
 	err := s.Restore()
 
 	if err != nil {
@@ -28,7 +29,7 @@ func NewFileStorage(filename string) (*FileStorage, error) {
 	return &s, nil
 }
 
-func (fs *FileStorage) persist(keysURLs [][]string) error {
+func (fs *FileStorage) persist(idsURLs [][]string) error {
 	file, err := os.OpenFile(fs.filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
 	if err != nil {
@@ -40,7 +41,7 @@ func (fs *FileStorage) persist(keysURLs [][]string) error {
 	w := csv.NewWriter(file)
 	defer w.Flush()
 
-	if err = w.WriteAll(keysURLs); err != nil {
+	if err = w.WriteAll(idsURLs); err != nil {
 		return err
 	}
 
@@ -52,25 +53,24 @@ func (fs *FileStorage) generate(URLs []string) ([][]string, map[string]string) {
 
 	defer fs.mu.Unlock()
 
-	var keysURLs [][]string
+	var idsURLs [][]string
 	keysByURLs := make(map[string]string, len(URLs))
 
 	for _, URL := range URLs {
 		fs.lastNumber++
-		key := convertNumberToKey(fs.lastNumber)
-		fs.links[key] = URL
-		keysURLs = append(keysURLs, []string{key, URL})
-		keysByURLs[URL] = key
+		fs.links[fs.lastNumber] = URL
+		idsURLs = append(idsURLs, []string{fmt.Sprintf("%d", fs.lastNumber), URL})
+		keysByURLs[URL] = convertNumberToKey(fs.lastNumber)
 	}
 
-	return keysURLs, keysByURLs
+	return idsURLs, keysByURLs
 }
 
 // StoreURLs Returns map with key=URL, value=key
 func (fs *FileStorage) StoreURLs(URLs []string) (map[string]string, error) {
-	keysURLs, keysByURLs := fs.generate(URLs)
+	idsURLs, keysByURLs := fs.generate(URLs)
 
-	if err := fs.persist(keysURLs); err != nil {
+	if err := fs.persist(idsURLs); err != nil {
 		return nil, err
 	}
 
@@ -114,7 +114,7 @@ func (fs *FileStorage) Restore() error {
 			return err
 		}
 
-		fs.links[convertNumberToKey(id)] = URL
+		fs.links[id] = URL
 		fs.lastNumber = id
 	}
 
@@ -122,14 +122,14 @@ func (fs *FileStorage) Restore() error {
 }
 
 func (fs *FileStorage) GetURL(key string) (string, error) {
-	return fs.links[key], nil
+	return fs.links[convertKeyToNumber(key)], nil
 }
 
 func (fs *FileStorage) GetURLs(keys []string) (map[string]string, error) {
 	URLs := make(map[string]string, len(keys))
 
 	for _, key := range keys {
-		if URL, ok := fs.links[key]; ok {
+		if URL, ok := fs.links[convertKeyToNumber(key)]; ok {
 			URLs[key] = URL
 		}
 	}
@@ -159,14 +159,14 @@ func NewFileStorageAsync(logger *application.Logger, background *application.Bac
 }
 
 func (fsa *FileStorageAsync) StoreURLs(URLs []string) (map[string]string, error) {
-	keysURLs, keysByURLs := fsa.fs.generate(URLs)
+	idsURLs, keysByURLs := fsa.fs.generate(URLs)
 
 	fsa.background.Run(func() {
 		fsa.mu.Lock()
 
 		defer fsa.mu.Unlock()
 
-		if err := fsa.fs.persist(keysURLs); err != nil {
+		if err := fsa.fs.persist(idsURLs); err != nil {
 			fsa.logger.LogError(err)
 		}
 	})

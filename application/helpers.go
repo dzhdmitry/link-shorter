@@ -6,9 +6,36 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type envelope map[string]interface{}
+
+type info struct {
+	basePadding int
+	lines       []string
+}
+
+func (i *info) pad(padding int) string {
+	return strings.Repeat(" ", padding) + "%-" + strconv.Itoa(i.basePadding-padding) + "s"
+}
+
+func (i *info) addString(padding int, name, value string) {
+	i.lines = append(i.lines, fmt.Sprintf(i.pad(padding)+"%s", name+":", value))
+}
+
+func (i *info) addBool(padding int, name string, value bool) {
+	i.lines = append(i.lines, fmt.Sprintf(i.pad(padding)+"%t", name+":", value))
+}
+
+func (i *info) addInt(padding int, name string, value int) {
+	i.lines = append(i.lines, fmt.Sprintf(i.pad(padding)+"%d", name+":", value))
+}
+
+func (i *info) getLines() string {
+	return strings.Join(i.lines, "\n")
+}
 
 func (app *Application) writeJSON(w http.ResponseWriter, r *http.Request, data interface{}) ([]byte, error) {
 	js, err := json.Marshal(data)

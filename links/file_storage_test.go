@@ -28,13 +28,13 @@ func TestRestore(t *testing.T) {
 		name            string
 		filepath        string
 		expectedLastKey int64
-		expectedLinks   map[string]string
+		expectedLinks   map[int64]string
 	}{
-		{"Non-existed file", "./../testdata/non-existing.csv", 0, map[string]string{}},
-		{"Regular file", "./../testdata/test_restore.csv", 3, map[string]string{
-			"1": "https://example1.com",
-			"2": "https://example2.com",
-			"3": "https://example3.com",
+		{"Non-existed file", "./../testdata/non-existing.csv", 0, map[int64]string{}},
+		{"Regular file", "./../testdata/test_restore.csv", 3, map[int64]string{
+			1: "https://example1.com",
+			2: "https://example2.com",
+			3: "https://example3.com",
 		}},
 	}
 
@@ -121,5 +121,4 @@ func TestAsyncStoreURLs(t *testing.T) {
 	data, err := os.ReadFile("./../testdata/results/test_store.csv")
 
 	require.Equal(t, "1,https://example.com\n", string(data))
-
 }

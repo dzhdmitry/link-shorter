@@ -3,13 +3,11 @@ package application
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -58,51 +56,38 @@ func NewConfig() Config {
 	}
 }
 
-func (c *Config) Parse() {
-	flag.StringVar(&c.ProjectHost, "host", c.ProjectHost, "Project server host")
-	flag.IntVar(&c.ProjectPort, "port", c.ProjectPort, "Project server port")
-	flag.StringVar(&c.ProjectStorageType, "storage", c.ProjectStorageType, "Storage type (file|postgres)")
-	flag.BoolVar(&c.FileAsync, "file-async", c.FileAsync, "File storage is asynchronous|synchronous (true|false)")
-	flag.StringVar(&c.DbDSN, "db-dsn", c.DbDSN, "PostgreSQL DSN")
-	flag.IntVar(&c.DbMaxOpenConns, "db-max-open-conns", c.DbMaxOpenConns, "PostgreSQL max open connections")
-	flag.IntVar(&c.DbMaxIdleConns, "db-max-idle-conns", c.DbMaxIdleConns, "PostgreSQL max idle connections")
-	flag.StringVar(&c.DbMaxIdleTime, "db-max-idle-time", c.DbMaxIdleTime, "PostgreSQL max connection idle time")
-	flag.IntVar(&c.DbTimeout, "db-timeout", c.DbTimeout, "PostgreSQL queries execution timeout")
-	flag.StringVar(&c.CacheType, "cache", c.CacheType, "Cache type (disabled|in-memory|redis)")
-	flag.IntVar(&c.CacheCapacity, "cache-cap", c.CacheCapacity, "Capacity of in-memory cache")
-	flag.StringVar(&c.CacheRedisDSN, "redis", c.CacheRedisDSN, "Redis DSN")
-	flag.BoolVar(&c.LimiterEnabled, "limiter", c.LimiterEnabled, "Rate limiter is enabled")
-	flag.IntVar(&c.LimiterRPS, "limiter-rps", c.LimiterRPS, "Rate limiter maximum RPS per IP")
-	flag.IntVar(&c.LimiterBurst, "limiter-burst", c.LimiterBurst, "Rate limiter maximum burst")
-	flag.Parse()
-}
-
 func (c *Config) Info() string {
-	lines := []string{
-		"Using config:",
-		"   Project:",
-		fmt.Sprintf("      Host:                 %s", c.ProjectHost),
-		fmt.Sprintf("      Port:                 %d", c.ProjectPort),
-		fmt.Sprintf("      Storage Type:         %s", c.ProjectStorageType),
-		"   File storage:",
-		fmt.Sprintf("      Is acync:             %t", c.FileAsync),
-		"   Database:",
-		fmt.Sprintf("      DSN:                  %s", c.DbDSN),
-		fmt.Sprintf("      Max open connections: %d", c.DbMaxOpenConns),
-		fmt.Sprintf("      Max idle connections: %d", c.DbMaxIdleConns),
-		fmt.Sprintf("      Max idle time:        %s", c.DbMaxIdleTime),
-		fmt.Sprintf("      Timeout (seconds):    %d", c.DbTimeout),
-		"   Cache:",
-		fmt.Sprintf("      Type:                 %s", c.CacheType),
-		fmt.Sprintf("      Capacity of cache:    %d", c.CacheCapacity),
-		fmt.Sprintf("      Redis DSN:            %s", c.CacheRedisDSN),
-		"   Rate limiter:",
-		fmt.Sprintf("      Rate limiter enabled: %t", c.LimiterEnabled),
-		fmt.Sprintf("      RPS per IP:           %d", c.LimiterRPS),
-		fmt.Sprintf("      Maximum burst:        %d", c.LimiterBurst),
+	inf := info{basePadding: 26}
+
+	inf.addString(2, "Start server on", fmt.Sprintf("\"%s:%d\"", c.ProjectHost, c.ProjectPort))
+	inf.addString(2, "Storage", c.ProjectStorageType)
+
+	if c.ProjectStorageType == StorageTypeFile {
+		inf.addBool(2, "Async", c.FileAsync)
+	} else if c.ProjectStorageType == StorageTypePostgres {
+		inf.addString(4, "DSN", c.DbDSN)
+		inf.addInt(4, "Max open connections", c.DbMaxOpenConns)
+		inf.addInt(4, "Max idle connections", c.DbMaxIdleConns)
+		inf.addString(4, "Max idle time", c.DbMaxIdleTime)
+		inf.addInt(4, "Timeout (seconds)", c.DbTimeout)
 	}
 
-	return strings.Join(lines, "\n")
+	inf.addString(2, "Cache", c.CacheType)
+
+	if c.CacheType == CacheTypeInMemory {
+		inf.addInt(4, "Capacity of cache", c.CacheCapacity)
+	} else if c.CacheType == CacheTypeRedis {
+		inf.addString(4, "Redis DSN", c.CacheRedisDSN)
+	}
+
+	inf.addBool(2, "Rate limiter enabled", c.LimiterEnabled)
+
+	if c.LimiterEnabled {
+		inf.addInt(4, "RPS per IP", c.LimiterRPS)
+		inf.addInt(4, "Maximum burst", c.LimiterBurst)
+	}
+
+	return "Using config:\n" + inf.getLines()
 }
 
 type Application struct {

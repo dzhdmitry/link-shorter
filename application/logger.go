@@ -3,12 +3,14 @@ package application
 import (
 	"fmt"
 	"io"
+	"sync"
 	"time"
 )
 
 type Logger struct {
 	out   io.Writer
 	clock ClockInterface
+	mu    sync.Mutex
 }
 
 func NewLogger(out io.Writer, clock ClockInterface) *Logger {
@@ -34,5 +36,9 @@ func (l *Logger) print(level, message string) {
 		message,
 	)
 
-	l.out.Write([]byte(record))
+	l.mu.Lock()
+
+	defer l.mu.Unlock()
+
+	_, _ = l.out.Write([]byte(record))
 }
