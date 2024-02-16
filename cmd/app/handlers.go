@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/julienschmidt/httprouter"
-	//_ "link-shorter.dzhdmitry.net/docs"
 	"net/http"
 )
 
