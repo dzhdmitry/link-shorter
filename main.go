@@ -66,7 +66,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	app := app.Application{
+	application := app.Application{
 		Config:     config,
 		Logger:     logger,
 		Validator:  *app.NewValidator(links.Letters),
@@ -76,7 +76,7 @@ func main() {
 
 	logger.LogInfo(config.Info())
 
-	err = app.Serve()
+	err = application.Serve()
 
 	if err != nil {
 		logger.LogError(err)

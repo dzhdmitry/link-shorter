@@ -112,7 +112,7 @@ func (app *Application) Serve() error {
 		Handler:      app.routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 40 * time.Second,
 	}
 
 	shutdownError := make(chan error)
