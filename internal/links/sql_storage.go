@@ -13,7 +13,6 @@ import (
 type SQLStorage struct {
 	db      *sql.DB
 	timeout time.Duration
-	lastKey string
 }
 
 func NewSQLStorage(db *sql.DB, timeout int) *SQLStorage {

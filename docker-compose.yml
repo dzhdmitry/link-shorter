@@ -18,10 +18,17 @@ services:
       - ./:/app
     depends_on:
       - postgres
+      - redis
     env_file:
       - .env
     stop_signal: SIGINT
     stop_grace_period: ${STOP_GRACE_PERIOD}
+
+  golangci:
+    image: golangci/golangci-lint:v1.56.2
+    working_dir: /app
+    volumes:
+      - ./:/app
 
   postgres:
     image: postgres:13-alpine

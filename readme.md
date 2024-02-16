@@ -25,11 +25,12 @@
 `go run .` (`go run . -help` для просмотра опций)
 </details>
 
-## Тесты
+## Тесты и линтеры
 
 ```bash
 make test
 make test-coverage
+make lint
 ```
 
 ## Описание

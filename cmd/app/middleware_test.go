@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
-	"io/ioutil"
 	"link-shorter.dzhdmitry.net/internal/utils"
 	"link-shorter.dzhdmitry.net/test"
 	"net/http"
@@ -42,7 +41,7 @@ func TestExtractGZIP(t *testing.T) {
 
 	require.NoError(t, err)
 
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 
 	require.Equal(t, "compact", string(body))
 }

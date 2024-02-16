@@ -88,7 +88,7 @@ func (c *LFUCache) Put(key string, value interface{}) error {
 
 	defer c.mu.Unlock()
 
-	if _, ok := c.cachedEntries[key]; ok == true {
+	if _, ok := c.cachedEntries[key]; ok {
 		// what if parallel task has already set key?
 		c.incrementFrequency(key)
 

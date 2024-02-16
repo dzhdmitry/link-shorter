@@ -23,6 +23,7 @@ func TestStoreURLs(t *testing.T) {
 
 	data, err := os.ReadFile(testdata + "/results/test_store.csv")
 
+	require.NoError(t, err)
 	require.Equal(t, "1,https://example.com\n", string(data))
 }
 

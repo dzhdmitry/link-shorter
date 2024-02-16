@@ -7,7 +7,12 @@ import (
 
 func (app *Application) indexHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("link-shorter"))
+
+	_, err := w.Write([]byte("link-shorter"))
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) {

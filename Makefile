@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: build up down ps bash migration migrate test test-coverage
+.PHONY: build up down ps bash migration migrate test test-coverage lint
 
 build:
 	docker-compose build
@@ -31,3 +31,6 @@ test-coverage:
 	docker-compose exec go go tool cover -html tmp/coverage.out -o tmp/coverage.html
 	docker-compose exec go rm tmp/coverage.out
 	@echo '   *** See tmp/coverage.html ***'
+
+lint:
+	docker-compose run --rm golangci golangci-lint run -v

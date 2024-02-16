@@ -118,7 +118,7 @@ func (app *Application) Serve() error {
 	shutdownError := make(chan error)
 
 	go func() {
-		quit := make(chan os.Signal)
+		quit := make(chan os.Signal, 1)
 
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 

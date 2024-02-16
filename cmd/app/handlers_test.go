@@ -174,7 +174,7 @@ func TestGoHandlerOK(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := newRequestWithNamedParameter(http.MethodGet, "/go/:key", httprouter.Params{
-		{"key", "1"},
+		httprouter.Param{Key: "key", Value: "1"},
 	})
 
 	app.goHandler(w, r)
@@ -211,7 +211,7 @@ func TestGoHandlerBadRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			r := newRequestWithNamedParameter(http.MethodGet, "/go/:key", httprouter.Params{
-				{"key", tt.key},
+				httprouter.Param{Key: "key", Value: tt.key},
 			})
 
 			app.goHandler(w, r)
@@ -369,8 +369,7 @@ func newRequestWithNamedParameter(method, target string, params any) *http.Reque
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, httprouter.ParamsKey, params)
 
-	r.WithContext(ctx)
-
+	_ = r.WithContext(ctx)
 	r, _ = http.NewRequestWithContext(ctx, method, target, nil)
 
 	return r
