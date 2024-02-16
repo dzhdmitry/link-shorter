@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: build up down ps bash migration migrate test test-coverage lint
+.PHONY: build up down ps bash migration migrate test test-coverage lint swagger
 
 build:
 	docker-compose build
@@ -34,3 +34,6 @@ test-coverage:
 
 lint:
 	docker-compose run --rm golangci golangci-lint run -v
+
+swagger:
+	docker-compose exec go swag init -q

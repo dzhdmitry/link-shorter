@@ -1,0 +1,243 @@
+host: localhost:8080
+info:
+  contact: {}
+  description: Simple url shorter on go.
+  license:
+    name: MIT
+    url: https://github.com/dzhdmitry/link-shorter?tab=MIT-1-ov-file
+  title: Link shorter
+  version: "1.0"
+paths:
+  /:
+    get:
+      consumes:
+      - text/html
+      description: Does nothing
+      produces:
+      - text/html
+      responses: {}
+      summary: Index
+      tags:
+      - Default
+  /batch/generate:
+    post:
+      consumes:
+      - application/json
+      description: Provide plenty of links and get short url for each
+      parameters:
+      - description: Original URLs
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              links:
+                properties:
+                  key:
+                    type: string
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Generate short links
+      tags:
+      - Multiple links
+  /batch/go:
+    get:
+      consumes:
+      - application/json
+      description: Provide short keys and get original url for each
+      parameters:
+      - description: Short keys
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              links:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Get short links
+      tags:
+      - Multiple links
+  /generate:
+    post:
+      consumes:
+      - application/json
+      description: Provide long link and get short one
+      parameters:
+      - description: Original URL
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            URL:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              link:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Generate short link
+      tags:
+      - Single link
+  /go/{key}:
+    get:
+      consumes:
+      - application/json
+      description: Go by short link and get original url
+      parameters:
+      - description: Short key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              links:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Get short link
+      tags:
+      - Single link
+swagger: "2.0"

@@ -19,6 +19,7 @@ WORKDIR /app
 COPY go.mod .
 COPY go.sum .
 
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 RUN go mod download
 
 USER go

@@ -4,12 +4,21 @@ import (
 	"flag"
 	"github.com/caarlos0/env/v10"
 	"link-shorter.dzhdmitry.net/cmd/app"
+	_ "link-shorter.dzhdmitry.net/docs"
 	"link-shorter.dzhdmitry.net/internal/container"
 	"link-shorter.dzhdmitry.net/internal/links"
 	"link-shorter.dzhdmitry.net/internal/utils"
 	"os"
 )
 
+// @title         Link shorter
+// @version       1.0
+// @description   Simple url shorter on go.
+
+// @license.name  MIT
+// @license.url   https://github.com/dzhdmitry/link-shorter?tab=MIT-1-ov-file
+
+// @host      localhost:8080
 func main() {
 	config := app.NewConfig()
 	logger := utils.NewLogger(os.Stdout, &utils.Clock{})

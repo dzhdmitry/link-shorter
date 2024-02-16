@@ -2,9 +2,16 @@ package app
 
 import (
 	"github.com/julienschmidt/httprouter"
+	//_ "link-shorter.dzhdmitry.net/docs"
 	"net/http"
 )
 
+// @Summary      Index
+// @Description  Does nothing
+// @Tags         Default
+// @Accept       html
+// @Produce      html
+// @Router       / [get]
 func (app *Application) indexHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
@@ -15,6 +22,19 @@ func (app *Application) indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// generateHandler godoc
+// @Summary      Generate short link
+// @Description  Provide long link and get short one
+// @Tags         Single link
+// @Accept       json
+// @Produce      json
+// @Param        request body object{URL=string} true "Original URL"
+// @Success      200  {object}  object{link=string}
+// @Failure      400  {object}  object{error=string}
+// @Failure      422  {object}  object{error=string}
+// @Failure      404  {object}  object{error=string}
+// @Failure      500  {object}  object{error=string}
+// @Router       /generate [post]
 func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		URL string
@@ -61,6 +81,19 @@ func (app *Application) generateHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// goHandler godoc
+// @Summary      Get short link
+// @Description  Go by short link and get original url
+// @Tags         Single link
+// @Accept       json
+// @Produce      json
+// @Param        key   path string true "Short key"
+// @Success      200  {object}  object{links=string}
+// @Failure      400  {object}  object{error=string}
+// @Failure      422  {object}  object{error=string}
+// @Failure      404  {object}  object{error=string}
+// @Failure      500  {object}  object{error=string}
+// @Router       /go/{key} [get]
 func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 	key := httprouter.ParamsFromContext(r.Context()).ByName("key")
 
@@ -100,6 +133,19 @@ func (app *Application) goHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// batchGenerateHandler godoc
+// @Summary      Generate short links
+// @Description  Provide plenty of links and get short url for each
+// @Tags         Multiple links
+// @Accept       json
+// @Produce      json
+// @Param        request body []string true "Original URLs"
+// @Success      200  {object}  object{links=object{key=string}}
+// @Failure      400  {object}  object{error=string}
+// @Failure      422  {object}  object{error=string}
+// @Failure      404  {object}  object{error=string}
+// @Failure      500  {object}  object{error=string}
+// @Router       /batch/generate [post]
 func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Request) {
 	var data []string
 
@@ -147,6 +193,19 @@ func (app *Application) batchGenerateHandler(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+// batchGoHandler godoc
+// @Summary      Get short links
+// @Description  Provide short keys and get original url for each
+// @Tags         Multiple links
+// @Accept       json
+// @Produce      json
+// @Param        request body []string true "Short keys"
+// @Success      200  {object}  object{links=string}
+// @Failure      400  {object}  object{error=string}
+// @Failure      422  {object}  object{error=string}
+// @Failure      404  {object}  object{error=string}
+// @Failure      500  {object}  object{error=string}
+// @Router       /batch/go [get]
 func (app *Application) batchGoHandler(w http.ResponseWriter, r *http.Request) {
 	var data []string
 

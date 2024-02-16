@@ -56,22 +56,9 @@ make lint
 6. Может ограничивать кол-во запросов к сервису от одного IP, при превышении предела отдаёт HTTP-код 429.
 7. Параметры (тип хранилища, параметры соединения с бд, объём кеша, кол-во запросов) задаются переменными окружения и Args командной строки.
 
-### Endpoint-ы:
+### Endpoint-ы
 
-1. `POST http://localhost/generate`
-   * запрос: `{"URL": "http://a.com/path"}`
-   * ответ: `{"link": "http://localhost/go/7pv"}`
-
-2. `GET http://localhost/go/:key`
-   * ответ: `{"link": "http://localhost/go/7pv"}`
-
-3. `POST http://localhost/batch/generate`
-   * запрос: `["http://a.com/path", "http://b.com/path"]`
-   * ответ: `{"links": {"http://a.com/path": "http://localhost/go/7pv", "http://b.com/path": "http://localhost/go/5v6"}}`
-
-4. `GET http://localhost/batch/go`
-   * запрос: `["7pv", "5v6"]`
-   * ответ: `{"links": {"7pv": "http://a.com/path", "5v6":"http://b.com/path"}}`
+см. `/docs/swagger.json`.
 
 Все входящие ссылки должны быть валидными URL-ами.
 Ссылки в запросе `/batch/generate` не должны повторяться.
