@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"github.com/felixge/httpsnoop"
 	"golang.org/x/time/rate"
 	"io"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -178,4 +180,12 @@ func (app *Application) rateLimit(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (app *Application) metricsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		metrics := httpsnoop.CaptureMetrics(next, w, r)
+
+		MetricRequestsTotal.WithLabelValues(strconv.Itoa(metrics.Code)).Observe(metrics.Duration.Seconds())
+	}
 }

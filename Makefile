@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: build up down ps bash migration migrate test test-coverage lint swagger
+.PHONY: build up down ps logs bash bash-root migration migrate test test-coverage lint swagger
 
 build:
 	docker-compose build
@@ -14,8 +14,14 @@ down:
 ps:
 	docker-compose ps
 
+logs:
+	docker-compose logs go
+
 bash:
 	docker-compose exec go bash
+
+bash-root:
+	docker-compose exec -u root go bash
 
 migration:
 	docker-compose exec go migrate create -seq -ext=.sql -dir=./migrations ${name}

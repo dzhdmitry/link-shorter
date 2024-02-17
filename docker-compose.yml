@@ -50,3 +50,10 @@ services:
       - ./configs/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"
+
+  prometheus:
+    image: bitnami/prometheus:latest
+    volumes:
+      - ./configs/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml
+    ports:
+      - "9090:9090"
