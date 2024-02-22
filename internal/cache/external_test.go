@@ -2,9 +2,9 @@ package cache
 
 import (
 	"context"
+	"github.com/dzhdmitry/link-shorter/test"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
-	"link-shorter.dzhdmitry.net/test"
 	"testing"
 )
 

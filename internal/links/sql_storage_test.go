@@ -2,11 +2,11 @@ package links
 
 import (
 	"database/sql"
+	"github.com/dzhdmitry/link-shorter/internal/db"
+	"github.com/dzhdmitry/link-shorter/test"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/stretchr/testify/suite"
-	"link-shorter.dzhdmitry.net/internal/db"
-	"link-shorter.dzhdmitry.net/test"
 	"testing"
 )
 

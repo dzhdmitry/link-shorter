@@ -2,11 +2,11 @@ package app
 
 import (
 	"bytes"
+	"github.com/dzhdmitry/link-shorter/internal/utils"
+	"github.com/dzhdmitry/link-shorter/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
-	"link-shorter.dzhdmitry.net/internal/utils"
-	"link-shorter.dzhdmitry.net/test"
 	"net/http"
 	"net/http/httptest"
 	"os"

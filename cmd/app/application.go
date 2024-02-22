@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"link-shorter.dzhdmitry.net/internal/utils"
+	"github.com/dzhdmitry/link-shorter/internal/utils"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,41 +20,21 @@ const CacheTypeInMemory = "in-memory"
 const CacheTypeRedis = "redis"
 
 type Config struct {
-	ProjectHost        string `env:"PROJECT_HOST"`
-	ProjectPort        int    `env:"PROJECT_PORT"`
-	ProjectStorageType string `env:"PROJECT_STORAGE_TYPE"`
-	FileAsync          bool   `env:"FILE_ASYNC"`
-	DbDSN              string `env:"DB_DSN"`
-	DbMaxOpenConns     int    `env:"DB_MAX_OPEN_CONNS"`
-	DbMaxIdleConns     int    `env:"DB_MAX_IDLE_CONNS"`
-	DbMaxIdleTime      string `env:"DB_MAX_OPEN_TIME"`
-	DbTimeout          int    `env:"DATABASE_TIMEOUT"`
-	CacheType          string `env:"CACHE_TYPE"`
-	CacheCapacity      int    `env:"CACHE_CAPACITY"`
-	CacheRedisDSN      string `env:"CACHE_REDIS_DSN"`
-	LimiterEnabled     bool   `env:"LIMITER_ENABLED"`
-	LimiterRPS         int    `env:"LIMITER_RPS"`
-	LimiterBurst       int    `env:"LIMITER_BURST"`
-}
-
-func NewConfig() Config {
-	return Config{
-		ProjectHost:        "",
-		ProjectPort:        80,
-		ProjectStorageType: StorageTypeFile,
-		FileAsync:          false,
-		DbDSN:              "postgres://go:pa55word@postgres:5432/short_links?sslmode=disable",
-		DbMaxOpenConns:     25,
-		DbMaxIdleConns:     25,
-		DbMaxIdleTime:      "15m",
-		DbTimeout:          1,
-		CacheType:          CacheTypeDisabled,
-		CacheCapacity:      0,
-		CacheRedisDSN:      "redis://redis:6379/0",
-		LimiterEnabled:     true,
-		LimiterRPS:         2,
-		LimiterBurst:       4,
-	}
+	ProjectHost        string `env:"PROJECT_HOST" env-default:""`
+	ProjectPort        int    `env:"PROJECT_PORT" env-default:"80"`
+	ProjectStorageType string `env:"PROJECT_STORAGE_TYPE" env-default:"file"`
+	FileAsync          bool   `env:"FILE_ASYNC" env-default:"false"`
+	DbDSN              string `env:"DB_DSN" env-default:"postgres://go:pa55word@localhost:5432/short_links?sslmode=disable"`
+	DbMaxOpenConns     int    `env:"DB_MAX_OPEN_CONNS" env-default:"25"`
+	DbMaxIdleConns     int    `env:"DB_MAX_IDLE_CONNS" env-default:"25"`
+	DbMaxIdleTime      string `env:"DB_MAX_OPEN_TIME" env-default:"15m"`
+	DbTimeout          int    `env:"DATABASE_TIMEOUT" env-default:"1"`
+	CacheType          string `env:"CACHE_TYPE" env-default:"disabled"`
+	CacheCapacity      int    `env:"CACHE_CAPACITY" env-default:"10"`
+	CacheRedisDSN      string `env:"CACHE_REDIS_DSN" env-default:"redis://localhost:6379/0"`
+	LimiterEnabled     bool   `env:"LIMITER_ENABLED" env-default:"true"`
+	LimiterRPS         int    `env:"LIMITER_RPS" env-default:"2"`
+	LimiterBurst       int    `env:"LIMITER_BURST" env-default:"4"`
 }
 
 func (c *Config) Info() string {

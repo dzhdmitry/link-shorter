@@ -1,9 +1,9 @@
 package test
 
 import (
+	"github.com/dzhdmitry/link-shorter/internal/db"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/redis/go-redis/v9"
-	"link-shorter.dzhdmitry.net/internal/db"
 	"os"
 	"time"
 )

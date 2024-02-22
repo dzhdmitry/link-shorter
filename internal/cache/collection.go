@@ -2,7 +2,7 @@ package cache
 
 import (
 	"fmt"
-	"link-shorter.dzhdmitry.net/cmd/app"
+	"github.com/dzhdmitry/link-shorter/cmd/app"
 )
 
 type LinksCacheInterface interface {

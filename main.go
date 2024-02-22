@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
-	"github.com/caarlos0/env/v10"
-	"link-shorter.dzhdmitry.net/cmd/app"
-	_ "link-shorter.dzhdmitry.net/docs"
-	"link-shorter.dzhdmitry.net/internal/container"
-	"link-shorter.dzhdmitry.net/internal/links"
-	"link-shorter.dzhdmitry.net/internal/utils"
+	"github.com/dzhdmitry/link-shorter/cmd/app"
+	_ "github.com/dzhdmitry/link-shorter/docs"
+	"github.com/dzhdmitry/link-shorter/internal/container"
+	"github.com/dzhdmitry/link-shorter/internal/links"
+	"github.com/dzhdmitry/link-shorter/internal/utils"
+	"github.com/ilyakaznacheev/cleanenv"
 	"os"
 )
 
@@ -20,11 +20,11 @@ import (
 
 // @host      localhost:8080
 func main() {
-	config := app.NewConfig()
+	config := app.Config{}
 	logger := utils.NewLogger(os.Stdout, &utils.Clock{})
 	background := &utils.Background{}
 
-	if err := env.Parse(&config); err != nil {
+	if err := cleanenv.ReadConfig(".env", &config); err != nil {
 		logger.LogError(err)
 		os.Exit(1)
 	}

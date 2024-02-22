@@ -2,8 +2,8 @@ package utils
 
 import (
 	"errors"
+	"github.com/dzhdmitry/link-shorter/test"
 	"github.com/stretchr/testify/assert"
-	"link-shorter.dzhdmitry.net/test"
 	"testing"
 )
 

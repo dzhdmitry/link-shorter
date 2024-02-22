@@ -3,12 +3,12 @@ package container
 import (
 	"database/sql"
 	"errors"
+	"github.com/dzhdmitry/link-shorter/cmd/app"
+	"github.com/dzhdmitry/link-shorter/internal/cache"
+	"github.com/dzhdmitry/link-shorter/internal/db"
+	"github.com/dzhdmitry/link-shorter/internal/links"
+	"github.com/dzhdmitry/link-shorter/internal/utils"
 	"github.com/redis/go-redis/v9"
-	"link-shorter.dzhdmitry.net/cmd/app"
-	"link-shorter.dzhdmitry.net/internal/cache"
-	"link-shorter.dzhdmitry.net/internal/db"
-	"link-shorter.dzhdmitry.net/internal/links"
-	"link-shorter.dzhdmitry.net/internal/utils"
 )
 
 const storageFilename = "tmp/storage.csv"

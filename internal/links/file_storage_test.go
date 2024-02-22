@@ -1,9 +1,9 @@
 package links
 
 import (
+	"github.com/dzhdmitry/link-shorter/internal/utils"
 	"github.com/stretchr/testify/require"
 	"io"
-	"link-shorter.dzhdmitry.net/internal/utils"
 	"os"
 	"testing"
 )
